@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOOM - Práctica 2</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="crono.js" defer></script>
+</head>
+<body>
+
+    <main class="game-container">
+        <header>
+            <h1 class="title">B O O M</h1>
+        </header>
+
+        <div class="display-panel">
+            <div id="clave-secreta" class="slots">
+                <div class="slot" id="slot-0">*</div>
+                <div class="slot" id="slot-1">*</div>
+                <div class="slot" id="slot-2">*</div>
+                <div class="slot" id="slot-3">*</div>
+            </div>
+
+            <div id="cuenta-atrás" class="timer-display">0:00:00</div>
+
+            <div class="información-de-intento">
+                <p>Intentos restantes: <span id="attempts-count">7</span></p>
+                <p id="message-display" class="message">
+                    Nueva partida preparada. Pulsa Start o un número para comenzar.
+                </p>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="keypad">
+                <button class="num-btn" data-number="7">7</button>
+                <button class="num-btn" data-number="8">8</button>
+                <button class="num-btn" data-number="9">9</button>
+                
+                <button class="num-btn" data-number="4">4</button>
+                <button class="num-btn" data-number="5">5</button>
+                <button class="num-btn" data-number="6">6</button>
+                
+                <button class="num-btn" data-number="1">1</button>
+                <button class="num-btn" data-number="2">2</button>
+                <button class="num-btn" data-number="3">3</button>
+                
+                <div class="spacer"></div>
+                <button class="num-btn" data-number="0">0</button>
+                <div class="spacer"></div>
+            </div>
+
+            <div class="actions">
+                <button id="btn-start" class="action-btn start">Start</button>
+                <button id="btn-stop" class="action-btn stop">Stop</button>
+                <button id="btn-reset" class="action-btn reset">Reset</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="main.js"></script>
+</body>
+</html>

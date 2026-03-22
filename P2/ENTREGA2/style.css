@@ -1,0 +1,118 @@
+
+body {
+    background-color: #032f5a;
+    color: #ffffff; 
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    border: 2px solid #7ea9d2;
+    padding: 20px;
+    width: 90%;
+    max-width: 450px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(220, 224, 220, 0.2);
+}
+
+/* Título */
+.title {
+    letter-spacing: 10px;
+    border-bottom: 2px solid #dbdee1;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Panel de Clave Secreta */
+.display-panel {
+    border: 1px solid #eef4ee;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.slots {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 15px;
+}
+
+.slot {
+    width: 60px;
+    height: 50px;
+    border: 2px solid #AED6F1; 
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    color: #ff3333; /* Rojo para los asteriscos iniciales */
+}
+
+/* Clase para cuando aciertes un número */
+.slot.acierto {
+    color: #33ff33;
+    border-width: 2px;
+}
+
+.timer-display {
+    font-size: 2.5rem;
+    margin: 10px 0;
+}
+
+/* Teclado Numérico con Grid */
+.keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    background: transparent;
+    border: 1px solid #ffffff; /* ¡Asegúrate de poner este ; final! */
+    color: #ffffff; /* Este es el color blanco para el texto */
+    padding: 15px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Ajusta el efecto hover para que el brillo también sea blanco */
+button:hover:not(:disabled) {
+    background: rgba(163, 135, 135, 0.1); /* Fondo blanco tenue */
+    box-shadow: 0 0 10px #ffffff;         /* Brillo blanco */
+}
+
+/* Botones usados o desactivados */
+button:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    border-color:#555555;
+}
+
+/* Botones de Acción (Start, Stop, Reset) */
+.actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.action-btn {
+    border-color: #ff5555;
+    color: #ff5555;
+    font-weight: bold;
+}
+
+.message {
+    font-size: 1rem;
+    min-height: 60px; /* Un poco más de espacio */
+    line-height: 1.4;
+    margin-top: 15px;
+    font-weight: bold;
+}
+.error-msg { color: #ff3333; }
+.success-msg { color: #33ff33; }

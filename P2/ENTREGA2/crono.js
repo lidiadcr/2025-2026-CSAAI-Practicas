@@ -35,4 +35,4 @@ function visualizarTiempo() {
     if (display) {
         display.innerText = formato;
     }
-} // <--- Esta es la llave que faltaba o estaba mal puesta
+} 

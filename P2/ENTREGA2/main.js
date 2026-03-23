@@ -39,7 +39,7 @@ function prepararNuevaPartida() {
     document.getElementById('btn-start').disabled = false;
     document.getElementById('btn-stop').disabled = false;
 
-    // Limpiar estilos de los slots (quitar el naranja/rojo del final)
+    // Limpiar estilos de los slots 
     const slots = document.querySelectorAll('.slot');
     slots.forEach(slot => {
         slot.innerText = '*';
@@ -71,14 +71,14 @@ function configurarBotones() {
             startCrono();
             juegoIniciado = true; 
         }
-    }; // <-- ESTA LLAVE faltaba por cerrar correctamente
+    }; 
 
     // Botón Stop
     document.getElementById('btn-stop').onclick = () => {
         stopCrono();
     };
 
-    // Botón Reset (Ahora sí funcionará)
+    // Botón Reset 
     document.getElementById('btn-reset').onclick = () => {
         prepararNuevaPartida();
     };

@@ -52,7 +52,7 @@ body {
     color: #ff3333; /* Rojo para los asteriscos iniciales */
 }
 
-/* Clase para cuando aciertes un número */
+
 .slot.acierto {
     color: #33ff33;
     border-width: 2px;
@@ -63,7 +63,7 @@ body {
     margin: 10px 0;
 }
 
-/* Teclado Numérico con Grid */
+
 .keypad {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -73,8 +73,8 @@ body {
 
 button {
     background: transparent;
-    border: 1px solid #ffffff; /* ¡Asegúrate de poner este ; final! */
-    color: #ffffff; /* Este es el color blanco para el texto */
+    border: 1px solid #ffffff;
+    color: #ffffff; 
     padding: 15px;
     font-size: 1.2rem;
     cursor: pointer;
@@ -83,8 +83,8 @@ button {
 
 /* Ajusta el efecto hover para que el brillo también sea blanco */
 button:hover:not(:disabled) {
-    background: rgba(163, 135, 135, 0.1); /* Fondo blanco tenue */
-    box-shadow: 0 0 10px #ffffff;         /* Brillo blanco */
+    background: rgba(163, 135, 135, 0.1); 
+    box-shadow: 0 0 10px #ffffff;         
 }
 
 /* Botones usados o desactivados */
@@ -109,7 +109,7 @@ button:disabled {
 
 .message {
     font-size: 1rem;
-    min-height: 60px; /* Un poco más de espacio */
+    min-height: 60px; 
     line-height: 1.4;
     margin-top: 15px;
     font-weight: bold;

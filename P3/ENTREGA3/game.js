@@ -68,12 +68,25 @@ document.addEventListener('keyup', e => {
     if (e.code === 'Space' && gameRunning) shoot();
 });
 
+// Añade esto debajo de tus otros listeners en game.js
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Evita que la pantalla se mueva al disparar
+    if (gameRunning) shoot(); 
+}, { passive: false });
+
+
+
+
 function shoot() {
     if (energy >= SHOOT_COST) {
         bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, speed: 7 });
         energy -= SHOOT_COST;
+        
         const snd = document.getElementById('snd-laser');
-        if(snd) snd.play();
+        if(snd) {
+            snd.currentTime = 0; // REINICIA el sonido para que pueda sonar rápido
+            snd.play();
+        }
     }
 }
 

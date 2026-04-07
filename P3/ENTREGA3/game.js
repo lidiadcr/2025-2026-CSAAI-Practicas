@@ -70,8 +70,13 @@ document.addEventListener('keyup', e => {
 
 // Añade esto debajo de tus otros listeners en game.js
 canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Evita que la pantalla se mueva al disparar
-    if (gameRunning) shoot(); 
+    // Esto evita que la pantalla se mueva o haga zoom al tocar
+    if (e.cancelable) e.preventDefault(); 
+    
+    // Si el juego está activo, dispara y el sonido sonará
+    if (gameRunning) {
+        shoot();
+    }
 }, { passive: false });
 
 

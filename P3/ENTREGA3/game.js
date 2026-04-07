@@ -2,45 +2,37 @@
 /* global iniciarCrono, detenerCrono */
 
 
-
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-
 // Imágenes
 const imgNave = new Image();
-imgNave.src = 'assets/nave.png';
-
+imgNave.src = 'assets/nave.png'; 
 
 const imgAlien = new Image();
 imgAlien.src = 'assets/alien2.png';
 
-
 let stars = [];
-
 
 function initStars() {
     stars = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 100; i++) { 
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 2
+            size: Math.random() * 2 
         });
     }
 }
-
 
 let score = 0;
 let lives = 3;
 let energy = 100;
 let gameRunning = true;
-let alienDirection = 1;
+let alienDirection = 1; 
 let alienSpeed = 1.5;
 const SHOOT_COST = 20;
 const RECHARGE_RATE = 0.4;
-
 
 const player = {
     x: canvas.width / 2 - 25,
@@ -50,13 +42,10 @@ const player = {
     speed: 5
 };
 
-
 let bullets = [];
 let enemyBullets = [];
 let aliens = [];
 let explosions = [];
-
-
 
 
 function initAliens() {
@@ -68,12 +57,10 @@ function initAliens() {
     }
 }
 
-
 const keys = {};
 document.addEventListener('keydown', e => {
     keys[e.code] = true;
 });
-
 
 document.addEventListener('keyup', e => {
     keys[e.code] = false;
@@ -81,78 +68,30 @@ document.addEventListener('keyup', e => {
     if (e.code === 'Space' && gameRunning) shoot();
 });
 
-
-
-
-// Soporte para disparar en móviles al tocar la pantalla
-canvas.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if (gameRunning) shoot();
-}, { passive: false });
-
-
-// NUEVO: Movimiento táctil (Deslizar el dedo para mover la nave)
-canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-   
-    // Ajuste de escala: Esto asegura que el movimiento sea preciso
-    // incluso si el canvas se encoge para caber en la pantalla del móvil
-    const scaleX = canvas.width / rect.width;
-    const touchX = (touch.clientX - rect.left) * scaleX;
-   
-    // Mueve el centro de la nave hacia el toque
-    player.x = touchX - player.width / 2;
-
-
-    // Límites para que la nave no se salga de la pantalla
-    if (player.x < 0) player.x = 0;
-    if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
-}, { passive: false });
-
-
-// Opcional: También permite disparar haciendo clic con el ratón
-canvas.addEventListener('mousedown', () => {
-    if (gameRunning) shoot();
-});
-
-
-
-
 function shoot() {
     if (energy >= SHOOT_COST) {
         bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, speed: 7 });
         energy -= SHOOT_COST;
-       
         const snd = document.getElementById('snd-laser');
-        if(snd) {
-            snd.currentTime = 0; // <--- ESTO ES CLAVE: Reinicia el audio para que suene cada vez
-            snd.play().catch(e => console.log("Espera a tocar la pantalla una vez"));
-        }
+        if(snd) snd.play();
     }
 }
 
-
 function update() {
     if (!gameRunning) return;
-
 
     // Corregido a dot notation para evitar advertencias del linter
     if (keys.ArrowLeft && player.x > 0) player.x -= player.speed;
     if (keys.ArrowRight && player.x < canvas.width - player.width) player.x += player.speed;
 
-
     if (energy < 100) energy += RECHARGE_RATE;
     const energyFill = document.getElementById('energy-fill');
     if (energyFill) energyFill.style.width = energy + "%";
-
 
     bullets.forEach((b, i) => {
         b.y -= b.speed;
         if (b.y < 0) bullets.splice(i, 1);
     });
-
 
     let touchEdge = false;
     aliens.forEach(a => {
@@ -160,18 +99,15 @@ function update() {
         if (a.x <= 0 || a.x + a.width >= canvas.width) touchEdge = true;
     });
 
-
     if (touchEdge) {
         alienDirection *= -1;
         aliens.forEach(a => a.y += 15);
     }
 
-
     if (Math.random() < 0.015 && aliens.length > 0) {
         const rA = aliens[Math.floor(Math.random() * aliens.length)];
         enemyBullets.push({ x: rA.x + 20, y: rA.y + 40, speed: 4 });
     }
-
 
     enemyBullets.forEach((eb, i) => {
         eb.y += eb.speed;
@@ -184,7 +120,6 @@ function update() {
         }
         if (eb.y > canvas.height) enemyBullets.splice(i, 1);
     });
-
 
     bullets.forEach((b, bi) => {
         aliens.forEach((a, ai) => {
@@ -202,14 +137,12 @@ function update() {
         });
     });
 
-
     if (aliens.length === 0) gameOver(true);
 }
 
-
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-   
+    
     ctx.fillStyle = "white";
     stars.forEach(star => {
         ctx.beginPath();
@@ -217,25 +150,22 @@ function draw() {
         ctx.fill();
     });
 
-
     if (gameRunning) {
         if (imgNave.complete && imgNave.naturalWidth !== 0) {
             ctx.drawImage(imgNave, player.x, player.y, player.width, player.height);
         } else {
-            ctx.fillStyle = "#00d2ff";
+            ctx.fillStyle = "#00d2ff"; 
             ctx.fillRect(player.x, player.y, player.width, player.height);
         }
-
 
         aliens.forEach(a => {
             if (imgAlien.complete && imgAlien.naturalWidth !== 0) {
                 ctx.drawImage(imgAlien, a.x, a.y, a.width, a.height);
             } else {
-                ctx.fillStyle = "#33ff33";
+                ctx.fillStyle = "#33ff33"; 
                 ctx.fillRect(a.x, a.y, a.width, a.height);
             }
         });
-
 
         ctx.fillStyle = "yellow";
         bullets.forEach(b => ctx.fillRect(b.x, b.y, 4, 10));
@@ -245,7 +175,7 @@ function draw() {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = "30px Arial"; // Cambiado a Arial por si no carga la fuente custom
-       
+        
         if (aliens.length === 0) {
             ctx.fillStyle = "#33ff33";
             ctx.fillText("VICTORY!", canvas.width / 2, canvas.height / 2);
@@ -258,7 +188,6 @@ function draw() {
         ctx.fillText("Reiniciando...", canvas.width / 2, canvas.height / 2 + 80);
     }
 
-
     explosions.forEach((exp, i) => {
         ctx.fillStyle = "orange";
         ctx.beginPath();
@@ -268,25 +197,21 @@ function draw() {
         if (exp.timer <= 0) explosions.splice(i, 1);
     });
 
-
     requestAnimationFrame(() => {
         update();
         draw();
     });
 }
 
-
 function gameOver(victory) {
     if (!gameRunning) return;
     gameRunning = false;
     detenerCrono();
 
-
     const snd = victory ? document.getElementById('snd-victory') : document.getElementById('snd-gameover');
     if(snd) snd.play();
     setTimeout(() => location.reload(), 4000);
 }
-
 
 function actualizarCorazones() {
     const container = document.getElementById('lives-icons-container');
@@ -294,44 +219,14 @@ function actualizarCorazones() {
     container.innerHTML = '';
     for (let i = 0; i < lives; i++) {
         const heart = document.createElement('span');
-        heart.innerText = '♥';
-        heart.style.color = '#ff3333';
-        heart.style.fontSize = '20px';
-        heart.style.margin = '0 2px';
-        heart.style.textShadow = '0 0 5px #ff3333';
+        heart.innerText = '♥'; 
+        heart.style.color = '#ff3333'; 
+        heart.style.fontSize = '20px'; 
+        heart.style.margin = '0 2px'; 
+        heart.style.textShadow = '0 0 5px #ff3333'; 
         container.appendChild(heart);
     }
 }
-
-
-
-
-function desbloquearAudio() {
-    const sonidos = ['snd-laser', 'snd-explosion', 'snd-victory', 'snd-gameover'];
-   
-    sonidos.forEach(id => {
-        const snd = document.getElementById(id);
-        if (snd) {
-            // Esto "despierta" el audio de forma efectiva en iOS/Android
-            snd.play().then(() => {
-                snd.pause();
-                snd.currentTime = 0;
-            }).catch(e => console.warn("Audio bloqueado aún:", id));
-        }
-    });
-
-
-    // Eliminamos los escuchadores para que no se ejecute en cada toque
-    document.removeEventListener('touchstart', desbloquearAudio);
-    document.removeEventListener('mousedown', desbloquearAudio);
-}
-
-
-// Escuchamos el primer toque del usuario
-document.addEventListener('touchstart', desbloquearAudio, { passive: false });
-document.addEventListener('mousedown', desbloquearAudio);
-
-
 
 // Inicialización
 initAliens();

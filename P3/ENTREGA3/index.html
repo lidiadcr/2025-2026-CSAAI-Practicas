@@ -9,28 +9,23 @@
 </head>
 <body>
 
-
-
-
     <div id="game-container">
         <header>
             <h1>INVASIÓN ALIENÍGENA</h1>
             <p class="subtitle">Episodio 18: La Defensa de Canva Centauri</p>
         </header>
 
-
         <div id="ui-layer">          
     <div class="stat-box">
         <span class="label">PUNTUACIÓN:</span>
         <span id="score">0</span>
     </div>
-   
+    
     <div class="stat-box">
         <span class="label">VIDAS:</span>
         <div id="lives-icons-container">
             </div>
     </div>
-
 
     <div class="stat-box">
         <span class="label">ENERGÍA:</span>
@@ -40,31 +35,27 @@
     </div>
 </div>
 
-
 <div id="bottom-ui">
     <div class="timer-box">
         <span class="label">TIEMPO:</span>
         <span id="timer">00:00</span>
     </div>
 </div>
-       
-
+        
 
         <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-
         <footer class="controls-hint">
-        <p>Mover: ◄ ► | Disparar: ESPACIO</p>
-    </footer>
-</div> <audio id="snd-laser" src="assets/sonidos/laser.mp3" preload="auto"></audio>
-<audio id="snd-explosion" src="assets/sonidos/explosion.mp3" preload="auto"></audio>
-<audio id="snd-victory" src="assets/sonidos/victoria.mp3" preload="auto"></audio>
-<audio id="snd-gameover" src="assets/sonidos/gameover.mp3" preload="auto"></audio>
+            <p>Mover: ◄ ► | Disparar: ESPACIO</p>
+        </footer>
+    </div>
 
-
-<script src="crono.js"></script>
-<script src="game.js"></script>
-
-
+    <audio id="snd-laser" src="assets/sonidos/laser.mp3" preload="auto"></audio>
+    <audio id="snd-explosion" src="assets/sonidos/explosion.mp3" preload="auto"></audio>
+    <audio id="snd-victory" src="assets/sonidos/victoria.mp3" preload="auto"></audio>
+    <audio id="snd-gameover" src="assets/sonidos/gameover.mp3" preload="auto"></audio>
+    
+    <script src="crono.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

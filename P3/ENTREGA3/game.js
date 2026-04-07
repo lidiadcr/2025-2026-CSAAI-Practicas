@@ -68,6 +68,39 @@ document.addEventListener('keyup', e => {
     if (e.code === 'Space' && gameRunning) shoot();
 });
 
+
+// Soporte para disparar en móviles al tocar la pantalla
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault(); 
+    if (gameRunning) shoot();
+}, { passive: false });
+
+// NUEVO: Movimiento táctil (Deslizar el dedo para mover la nave)
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    
+    // Ajuste de escala: Esto asegura que el movimiento sea preciso 
+    // incluso si el canvas se encoge para caber en la pantalla del móvil
+    const scaleX = canvas.width / rect.width;
+    const touchX = (touch.clientX - rect.left) * scaleX;
+    
+    // Mueve el centro de la nave hacia el toque
+    player.x = touchX - player.width / 2;
+
+    // Límites para que la nave no se salga de la pantalla
+    if (player.x < 0) player.x = 0;
+    if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+}, { passive: false });
+
+// Opcional: También permite disparar haciendo clic con el ratón
+canvas.addEventListener('mousedown', () => {
+    if (gameRunning) shoot();
+});
+
+
+
 function shoot() {
     if (energy >= SHOOT_COST) {
         bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, speed: 7 });

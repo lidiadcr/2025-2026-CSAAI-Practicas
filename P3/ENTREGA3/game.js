@@ -127,8 +127,8 @@ function shoot() {
        
         const snd = document.getElementById('snd-laser');
         if(snd) {
-            snd.currentTime = 0; // Reinicia el sonido si ya estaba sonando
-            snd.play();
+            snd.currentTime = 0; // <--- ESTO ES CLAVE: Reinicia el audio para que suene cada vez
+            snd.play().catch(e => console.log("Espera a tocar la pantalla una vez"));
         }
     }
 }
@@ -312,33 +312,27 @@ function desbloquearAudio() {
     sonidos.forEach(id => {
         const snd = document.getElementById(id);
         if (snd) {
-            // En móviles, el audio debe ser "reproducido" por una acción del usuario.
-            // Reproducimos y pausamos instantáneamente para habilitar el canal.
-            const playPromise = snd.play();
-           
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    snd.pause();
-                    snd.currentTime = 0;
-                }).catch(e => {
-                    console.log("Audio esperando interacción: ", id);
-                });
-            }
+            // Esto "despierta" el audio de forma efectiva en iOS/Android
+            snd.play().then(() => {
+                snd.pause();
+                snd.currentTime = 0;
+            }).catch(e => console.warn("Audio bloqueado aún:", id));
         }
     });
 
 
-    // IMPORTANTE: Quitamos los listeners para que esto solo ocurra una vez
+    // Eliminamos los escuchadores para que no se ejecute en cada toque
     document.removeEventListener('touchstart', desbloquearAudio);
     document.removeEventListener('mousedown', desbloquearAudio);
-    document.removeEventListener('keydown', desbloquearAudio);
 }
 
 
-// Escuchamos cualquier interacción inicial para desbloquear el audio
+// Escuchamos el primer toque del usuario
 document.addEventListener('touchstart', desbloquearAudio, { passive: false });
 document.addEventListener('mousedown', desbloquearAudio);
-document.addEventListener('keydown', desbloquearAudio);
+
+
+
 // Inicialización
 initAliens();
 initStars();

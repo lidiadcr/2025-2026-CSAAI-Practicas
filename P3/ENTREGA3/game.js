@@ -267,22 +267,19 @@ function desbloquearAudio() {
     sonidos.forEach(id => {
         const snd = document.getElementById(id);
         if (snd) {
-            // Intentamos reproducir y pausar para pedir permiso al móvil
+            snd.load(); // Fuerza al navegador a cargar el archivo
             snd.play().then(() => {
                 snd.pause();
                 snd.currentTime = 0;
-            }).catch(e => console.log("Esperando interacción para audio"));
+            }).catch(e => {
+                // Si falla aquí, es que el navegador aún bloquea o el archivo no existe
+                console.error("Fallo en id: " + id, e);
+            });
         }
     });
-    // Quitamos los eventos para que esto solo pase una vez
+    // Quitamos los eventos tras el primer toque
     document.removeEventListener('touchstart', desbloquearAudio);
-    document.removeEventListener('mousedown', desbloquearAudio);
 }
-
-// Registramos el toque inicial para activar el sonido
-document.addEventListener('touchstart', desbloquearAudio);
-document.addEventListener('mousedown', desbloquearAudio);
-
 // Inicialización
 initAliens();
 initStars();

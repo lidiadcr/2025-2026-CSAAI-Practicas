@@ -28,7 +28,7 @@ function initStars() {
 let score = 0;
 let lives = 3;
 let energy = 100;
-let gameRunning = true;
+let gameRunning = false; // Empieza en false hasta que el usuario pulse JUGAR
 let alienDirection = 1; 
 let alienSpeed = 1.5;
 const SHOOT_COST = 20;
@@ -64,41 +64,61 @@ document.addEventListener('keydown', e => {
 
 document.addEventListener('keyup', e => {
     keys[e.code] = false;
-    // Mantiene la lógica original del fuego
     if (e.code === 'Space' && gameRunning) shoot();
 });
 
-
-// Soporte para disparar en móviles al tocar la pantalla
+// Soporte táctil para disparar
 canvas.addEventListener('touchstart', e => {
     e.preventDefault(); 
     if (gameRunning) shoot();
 }, { passive: false });
 
-// NUEVO: Movimiento táctil (Deslizar el dedo para mover la nave)
+// Movimiento táctil
 canvas.addEventListener('touchmove', e => {
     e.preventDefault();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    
-    // Ajuste de escala: Esto asegura que el movimiento sea preciso 
-    // incluso si el canvas se encoge para caber en la pantalla del móvil
     const scaleX = canvas.width / rect.width;
     const touchX = (touch.clientX - rect.left) * scaleX;
-    
-    // Mueve el centro de la nave hacia el toque
     player.x = touchX - player.width / 2;
-
-    // Límites para que la nave no se salga de la pantalla
     if (player.x < 0) player.x = 0;
     if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 }, { passive: false });
 
-// Opcional: También permite disparar haciendo clic con el ratón
+// Clic con ratón para disparar
 canvas.addEventListener('mousedown', () => {
     if (gameRunning) shoot();
 });
 
+
+// ── BOTÓN DE INICIO ──
+// El clic/toque del usuario sobre el botón desbloquea el audio del navegador
+document.getElementById('start-btn').addEventListener('click', function() {
+    // 1. Desbloquear todos los sonidos (el gesto del usuario lo permite)
+    const sonidos = ['snd-laser', 'snd-explosion', 'snd-victory', 'snd-gameover'];
+    sonidos.forEach(id => {
+        const snd = document.getElementById(id);
+        if (snd) {
+            snd.load();
+            snd.play().then(() => {
+                snd.pause();
+                snd.currentTime = 0;
+            }).catch(e => console.warn("Audio no disponible:", id, e));
+        }
+    });
+
+    // 2. Ocultar pantalla de inicio y mostrar el juego
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+
+    // 3. Iniciar el juego
+    gameRunning = true;
+    initAliens();
+    initStars();
+    actualizarCorazones();
+    iniciarCrono();
+    draw();
+});
 
 
 function shoot() {
@@ -106,14 +126,13 @@ function shoot() {
         bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, speed: 7 });
         energy -= SHOOT_COST;
         const snd = document.getElementById('snd-laser');
-        if(snd) snd.play();
+        if(snd) { snd.currentTime = 0; snd.play(); }
     }
 }
 
 function update() {
     if (!gameRunning) return;
 
-    // Corregido a dot notation para evitar advertencias del linter
     if (keys.ArrowLeft && player.x > 0) player.x -= player.speed;
     if (keys.ArrowRight && player.x < canvas.width - player.width) player.x += player.speed;
 
@@ -164,7 +183,7 @@ function update() {
                 const scoreEl = document.getElementById('score');
                 if (scoreEl) scoreEl.innerText = score;
                 const expSnd = document.getElementById('snd-explosion');
-                if(expSnd) expSnd.play();
+                if(expSnd) { expSnd.currentTime = 0; expSnd.play(); }
                 alienSpeed += 0.1;
             }
         });
@@ -207,7 +226,7 @@ function draw() {
     } else {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.font = "30px Arial"; // Cambiado a Arial por si no carga la fuente custom
+        ctx.font = "30px Arial";
         
         if (aliens.length === 0) {
             ctx.fillStyle = "#33ff33";
@@ -242,7 +261,7 @@ function gameOver(victory) {
     detenerCrono();
 
     const snd = victory ? document.getElementById('snd-victory') : document.getElementById('snd-gameover');
-    if(snd) snd.play();
+    if(snd) { snd.currentTime = 0; snd.play(); }
     setTimeout(() => location.reload(), 4000);
 }
 
@@ -260,29 +279,3 @@ function actualizarCorazones() {
         container.appendChild(heart);
     }
 }
-
-
-function desbloquearAudio() {
-    const sonidos = ['snd-laser', 'snd-explosion', 'snd-victory', 'snd-gameover'];
-    sonidos.forEach(id => {
-        const snd = document.getElementById(id);
-        if (snd) {
-            snd.load(); // Fuerza al navegador a cargar el archivo
-            snd.play().then(() => {
-                snd.pause();
-                snd.currentTime = 0;
-            }).catch(e => {
-                // Si falla aquí, es que el navegador aún bloquea o el archivo no existe
-                console.error("Fallo en id: " + id, e);
-            });
-        }
-    });
-    // Quitamos los eventos tras el primer toque
-    document.removeEventListener('touchstart', desbloquearAudio);
-}
-// Inicialización
-initAliens();
-initStars();
-actualizarCorazones();
-iniciarCrono();
-draw();

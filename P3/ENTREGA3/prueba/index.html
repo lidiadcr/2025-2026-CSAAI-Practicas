@@ -2,13 +2,39 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invasión Alienígena - Canva Centauri</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="ui-container">
-        <h1>Invasión Alienígena</h1>
+        <h1 class="neon-text">INVASIÓN ALIENíGENA</h1>
+        <p id="episodio">Episodio 18: La Defensa de Canva Centauri</p>
+
+        <div id="ui-panel">
+            <div class="data-box">
+                <div class="data-label">PUNTUACIÓN:</div>
+                <div id="score-value" class="data-value">0</div>
+            </div>
+            
+            <div class="data-box">
+                <div class="data-label">VIDAS:</div>
+                <div id="lives-value" class="data-value">❤❤❤</div>
+            </div>
+
+            <div class="data-box">
+                <div class="data-label">ENERGíA:</div>
+                <div class="energy-bar-container">
+                    <div id="energy-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="time-panel">
+            <span id="time-label">TIEMPO:</span>
+            <span id="time-value">00:00</span>
+        </div>
+
         <canvas id="gameCanvas"></canvas>
         
         <div id="mobile-controls">

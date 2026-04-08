@@ -7,10 +7,17 @@ const ctx = canvas.getContext('2d');
 
 // Imágenes
 const imgNave = new Image();
-imgNave.src = 'assets/nave.png'; 
+imgNave.src = 'nave.png'; 
 
 const imgAlien = new Image();
-imgAlien.src = 'assets/alien2.png';
+imgAlien.src = 'alien2.png';
+
+
+const laserSound = new Audio('laser.mp3');
+const explosionSound = new Audio('explosion.mp3');
+const victoriaSound = new Audio('victoria.mp3');
+const gameoverSound = new Audio('gameover.mp3');
+
 
 let stars = [];
 
@@ -28,11 +35,15 @@ function initStars() {
 let score = 0;
 let lives = 3;
 let energy = 100;
-let gameRunning = true;
+let gameRunning = false;
+let victoria = false;
+
 let alienDirection = 1; 
 let alienSpeed = 1.5;
+
 const SHOOT_COST = 20;
 const RECHARGE_RATE = 0.4;
+
 
 const player = {
     x: canvas.width / 2 - 25,
@@ -66,17 +77,12 @@ document.addEventListener('keyup', e => {
     keys[e.code] = false;
     // Mantiene la lógica original del fuego
     if (e.code === 'Space' && gameRunning) shoot();
-});
+});z
 
 // Añade esto debajo de tus otros listeners en game.js
 canvas.addEventListener('touchstart', (e) => {
-    // Esto evita que la pantalla se mueva o haga zoom al tocar
-    if (e.cancelable) e.preventDefault(); 
-    
-    // Si el juego está activo, dispara y el sonido sonará
-    if (gameRunning) {
-        shoot();
-    }
+    e.preventDefault(); // Evita que la pantalla se mueva al disparar
+    if (gameRunning) shoot(); 
 }, { passive: false });
 
 

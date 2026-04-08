@@ -116,3 +116,13 @@ button:disabled {
 }
 .error-msg { color: #ff3333; }
 .success-msg { color: #33ff33; }
+
+/* Reemplaza el bloque anterior de canvas por este */
+canvas {
+    border: 4px solid #333; /* Borde más grueso para estilo retro */
+    background: radial-gradient(circle, #00040a 0%, #000 100%);
+    width: 100%;
+    height: auto;
+    margin-top: 10px;
+    image-rendering: pixelated; /* ¡Importante para que se vea nítido! */
+}

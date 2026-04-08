@@ -70,12 +70,16 @@ document.getElementById('btn-right').ontouchstart = () => keys['ArrowRight'] = t
 document.getElementById('btn-right').ontouchend = () => keys['ArrowRight'] = false;
 document.getElementById('btn-fire').onclick = () => shoot();
 
+// --- CONTROLES MÓVILES Y SONIDO ---
+document.getElementById('btn-fire').onclick = () => {
+    if (energy >= 20) shoot();
+};
+
 function shoot() {
     if (energy >= 20 && gameRunning) {
-        projectiles.push({ x: player.x + player.w/2 - 2, y: player.y, w: 4, h: 15 });
-        energy -= 20;
+        // ... (resto del código)
         laserSnd.currentTime = 0;
-        laserSnd.play().catch(()=>{});
+        laserSnd.play().catch(()=>{}); // <--- ESTA LÍNEA es la clave
     }
 }
 

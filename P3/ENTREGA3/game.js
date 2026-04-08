@@ -1,260 +1,222 @@
-/* jshint esversion: 6 */
-/* global iniciarCrono, detenerCrono */
-
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Imágenes
-const imgNave = new Image();
-imgNave.src = 'nave.png'; 
+canvas.width = 800;
+canvas.height = 600;
 
-const imgAlien = new Image();
-imgAlien.src = 'alien2.png';
+const scoreElement = document.getElementById('score-value');
+const livesElement = document.getElementById('lives-value');
+const energyFill = document.getElementById('energy-fill');
+const timeElement = document.getElementById('time-value');
 
-
-const laserSound = new Audio('laser.mp3');
-const explosionSound = new Audio('explosion.mp3');
-const victoriaSound = new Audio('victoria.mp3');
-const gameoverSound = new Audio('gameover.mp3');
-
-
-let stars = [];
-
-function initStars() {
-    stars = [];
-    for (let i = 0; i < 100; i++) { 
-        stars.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            size: Math.random() * 2 
-        });
-    }
-}
-
+// --- CONFIGURACIÓN Y ESTADO ---
 let score = 0;
 let lives = 3;
 let energy = 100;
-let gameRunning = false;
-let victoria = false;
+let gameRunning = true;
 
-let alienDirection = 1; 
-let alienSpeed = 1.5;
+// Velocidades base
+let alienStepY = 40; // <--- ¡ESTA ERA LA VARIABLE QUE FALTABA!
+let alienSpeedX = 1.0;
+let enemyBulletSpeed = 2.5;
 
-const SHOOT_COST = 20;
-const RECHARGE_RATE = 0.4;
+// Carga de sonidos
+const laserSnd = new Audio('laser.mp3');
+const explosionSnd = new Audio('explosion.mp3');
+const victorySnd = new Audio('victoria.mp3');
+const gameOverSnd = new Audio('gameover.mp3');
 
+// --- CRONÓMETRO ---
+let startTime;
+let timerInterval;
 
-const player = {
-    x: canvas.width / 2 - 25,
-    y: canvas.height - 60,
-    width: 50,
-    height: 50,
-    speed: 5
-};
+function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+}
 
-let bullets = [];
-let enemyBullets = [];
+function updateTimer() {
+    if (!gameRunning) return;
+    let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = String(Math.floor(elapsedTime / 60)).padStart(2, '0');
+    const seconds = String(elapsedTime % 60).padStart(2, '0');
+    timeElement.textContent = `${minutes}:${seconds}`;
+}
+
+// --- OBJETOS DEL JUEGO ---
+const player = { x: canvas.width / 2 - 25, y: canvas.height - 60, w: 50, h: 50, speed: 7 };
+let projectiles = [];
+let enemyProjectiles = [];
 let aliens = [];
-let explosions = [];
-
+let alienDir = 1;
 
 function initAliens() {
     aliens = [];
-    for (let row = 0; row < 3; row++) {
-        for (let col = 0; col < 8; col++) {
-            aliens.push({ x: 100 + col * 70, y: 50 + row * 60, width: 40, height: 40 });
+    for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 8; c++) {
+            aliens.push({ x: c * 70 + 100, y: r * 60 + 50, w: 40, h: 40, alive: true, explosionTimer: 0 });
         }
     }
 }
 
-const keys = {};
-document.addEventListener('keydown', e => {
-    keys[e.code] = true;
-});
+// --- CONTROLES ---
+let keys = {};
+window.onkeydown = (e) => keys[e.code] = true;
+window.onkeyup = (e) => keys[e.code] = false;
 
-document.addEventListener('keyup', e => {
-    keys[e.code] = false;
-    // Mantiene la lógica original del fuego
-    if (e.code === 'Space' && gameRunning) shoot();
-});z
-
-// Añade esto debajo de tus otros listeners en game.js
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Evita que la pantalla se mueva al disparar
-    if (gameRunning) shoot(); 
-}, { passive: false });
-
-
-
+document.getElementById('btn-left').ontouchstart = () => keys['ArrowLeft'] = true;
+document.getElementById('btn-left').ontouchend = () => keys['ArrowLeft'] = false;
+document.getElementById('btn-right').ontouchstart = () => keys['ArrowRight'] = true;
+document.getElementById('btn-right').ontouchend = () => keys['ArrowRight'] = false;
+document.getElementById('btn-fire').onclick = () => shoot();
 
 function shoot() {
-    if (energy >= SHOOT_COST) {
-        bullets.push({ x: player.x + player.width / 2 - 2, y: player.y, speed: 7 });
-        energy -= SHOOT_COST;
-        
-        const snd = document.getElementById('snd-laser');
-        if(snd) {
-            snd.currentTime = 0; // REINICIA el sonido para que pueda sonar rápido
-            snd.play();
-        }
+    if (energy >= 20 && gameRunning) {
+        projectiles.push({ x: player.x + player.w/2 - 2, y: player.y, w: 4, h: 15 });
+        energy -= 20;
+        laserSnd.currentTime = 0;
+        laserSnd.play().catch(()=>{});
     }
+}
+
+function updateUI() {
+    scoreElement.textContent = score;
+   
+    // CAMBIO A CORAZONES ❤
+    let corazones = "";
+    for(let i=0; i<lives; i++) { corazones += "❤"; }
+    livesElement.textContent = corazones || " ";
+
+    energyFill.style.width = energy + '%';
+    energyFill.style.background = energy < 20 ? 'red' : 'linear-gradient(90deg, #00AAFF, #00FFCC)';
 }
 
 function update() {
     if (!gameRunning) return;
 
-    // Corregido a dot notation para evitar advertencias del linter
-    if (keys.ArrowLeft && player.x > 0) player.x -= player.speed;
-    if (keys.ArrowRight && player.x < canvas.width - player.width) player.x += player.speed;
+    if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 0) player.x -= player.speed;
+    if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.w) player.x += player.speed;
+    if (keys['Space']) { shoot(); keys['Space'] = false; }
 
-    if (energy < 100) energy += RECHARGE_RATE;
-    const energyFill = document.getElementById('energy-fill');
-    if (energyFill) energyFill.style.width = energy + "%";
+    if (energy < 100) energy += 0.4;
 
-    bullets.forEach((b, i) => {
-        b.y -= b.speed;
-        if (b.y < 0) bullets.splice(i, 1);
-    });
+    let aliveAliens = aliens.filter(a => a.alive);
+    if (aliveAliens.length === 0) {
+        endGame(true); // Ganas
+        return;
+    }
+   
+    let speedMult = 1 + ((24 - aliveAliens.length) * 0.12);
+    let edgeReached = false;
 
-    let touchEdge = false;
     aliens.forEach(a => {
-        a.x += alienSpeed * alienDirection;
-        if (a.x <= 0 || a.x + a.width >= canvas.width) touchEdge = true;
-    });
+        if (!a.alive) return;
+        a.x += (alienSpeedX * alienDir) * speedMult;
+        if (a.x > canvas.width - a.w || a.x < 0) edgeReached = true;
+        if (a.y + a.h >= player.y) endGame(false); // Invasión
 
-    if (touchEdge) {
-        alienDirection *= -1;
-        aliens.forEach(a => a.y += 15);
-    }
-
-    if (Math.random() < 0.015 && aliens.length > 0) {
-        const rA = aliens[Math.floor(Math.random() * aliens.length)];
-        enemyBullets.push({ x: rA.x + 20, y: rA.y + 40, speed: 4 });
-    }
-
-    enemyBullets.forEach((eb, i) => {
-        eb.y += eb.speed;
-        if (eb.x < player.x + player.width && eb.x + 5 > player.x &&
-            eb.y < player.y + player.height && eb.y + 10 > player.y) {
-            enemyBullets.splice(i, 1);
-            lives--;
-            actualizarCorazones();
-            if (lives <= 0) gameOver(false);
+        if (Math.random() < 0.0015) {
+            enemyProjectiles.push({ x: a.x + 18, y: a.y + 40, w: 4, h: 10 });
         }
-        if (eb.y > canvas.height) enemyBullets.splice(i, 1);
     });
 
-    bullets.forEach((b, bi) => {
-        aliens.forEach((a, ai) => {
-            if (b.x < a.x + a.width && b.x + 4 > a.x && b.y < a.y + a.height && b.y + 10 > a.y) {
-                bullets.splice(bi, 1);
-                explosions.push({x: a.x, y: a.y, timer: 15});
-                aliens.splice(ai, 1);
+    if (edgeReached) {
+        alienDir *= -1;
+        aliens.forEach(a => { a.y += alienStepY; }); // Aquí ya no fallará
+    }
+
+    projectiles.forEach((p, pi) => {
+        p.y -= 10;
+        aliens.forEach(a => {
+            if (a.alive && p.x < a.x + a.w && p.x + p.w > a.x && p.y < a.y + a.h && p.y + p.h > a.y) {
+                a.alive = false;
+                a.explosionTimer = 15;
+                projectiles.splice(pi, 1);
                 score += 10;
-                const scoreEl = document.getElementById('score');
-                if (scoreEl) scoreEl.innerText = score;
-                const expSnd = document.getElementById('snd-explosion');
-                if(expSnd) expSnd.play();
-                alienSpeed += 0.1;
+                explosionSnd.currentTime = 0;
+                explosionSnd.play().catch(()=>{});
             }
         });
+        if (p.y < 0) projectiles.splice(pi, 1);
     });
 
-    if (aliens.length === 0) gameOver(true);
+    enemyProjectiles.forEach((ep, epi) => {
+        ep.y += enemyBulletSpeed;
+        if (ep.x < player.x + player.w && ep.x + ep.w > player.x && ep.y < player.y + player.h && ep.y + ep.h > player.y) {
+            enemyProjectiles.splice(epi, 1);
+            lives--;
+            if (lives <= 0) endGame(false); // Sin vidas
+        }
+        if (ep.y > canvas.height) enemyProjectiles.splice(epi, 1);
+    });
+
+    updateUI();
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.fillStyle = "white";
-    stars.forEach(star => {
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
+    ctx.fillStyle = "#00AAFF";
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+
+    aliens.forEach(a => {
+        if (a.alive) {
+            ctx.fillStyle = "#00FF44";
+            ctx.fillRect(a.x, a.y, a.w, a.h);
+        } else if (a.explosionTimer > 0) {
+            ctx.fillStyle = "orange";
+            ctx.fillRect(a.x, a.y, a.w, a.h);
+            a.explosionTimer--;
+        }
     });
 
-    if (gameRunning) {
-        if (imgNave.complete && imgNave.naturalWidth !== 0) {
-            ctx.drawImage(imgNave, player.x, player.y, player.width, player.height);
-        } else {
-            ctx.fillStyle = "#00d2ff"; 
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
+    ctx.fillStyle = "cyan";
+    projectiles.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+    ctx.fillStyle = "red";
+    enemyProjectiles.forEach(ep => ctx.fillRect(ep.x, ep.y, ep.w, ep.h));
 
-        aliens.forEach(a => {
-            if (imgAlien.complete && imgAlien.naturalWidth !== 0) {
-                ctx.drawImage(imgAlien, a.x, a.y, a.width, a.height);
-            } else {
-                ctx.fillStyle = "#33ff33"; 
-                ctx.fillRect(a.x, a.y, a.width, a.height);
-            }
-        });
-
-        ctx.fillStyle = "yellow";
-        bullets.forEach(b => ctx.fillRect(b.x, b.y, 4, 10));
-        ctx.fillStyle = "red";
-        enemyBullets.forEach(eb => ctx.fillRect(eb.x, eb.y, 4, 10));
-    } else {
+    if (!gameRunning) {
+        let win = aliens.filter(a => a.alive).length === 0;
+        ctx.fillStyle = win ? "#00FF44" : "red";
+        ctx.font = "bold 60px Arial";
         ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "30px Arial"; // Cambiado a Arial por si no carga la fuente custom
-        
-        if (aliens.length === 0) {
-            ctx.fillStyle = "#33ff33";
-            ctx.fillText("VICTORY!", canvas.width / 2, canvas.height / 2);
-        } else {
-            ctx.fillStyle = "red";
-            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
-        }
-        ctx.fillStyle = "white";
-        ctx.font = "15px Arial";
-        ctx.fillText("Reiniciando...", canvas.width / 2, canvas.height / 2 + 80);
+        ctx.fillText(win ? "¡VICTORIA!" : "GAME OVER", canvas.width/2, canvas.height/2);
     }
-
-    explosions.forEach((exp, i) => {
-        ctx.fillStyle = "orange";
-        ctx.beginPath();
-        ctx.arc(exp.x + 20, exp.y + 20, 20, 0, Math.PI*2);
-        ctx.fill();
-        exp.timer--;
-        if (exp.timer <= 0) explosions.splice(i, 1);
-    });
-
-    requestAnimationFrame(() => {
-        update();
-        draw();
-    });
 }
 
-function gameOver(victory) {
+function endGame(win) {
     if (!gameRunning) return;
     gameRunning = false;
-    detenerCrono();
-
-    const snd = victory ? document.getElementById('snd-victory') : document.getElementById('snd-gameover');
-    if(snd) snd.play();
-    setTimeout(() => location.reload(), 4000);
-}
-
-function actualizarCorazones() {
-    const container = document.getElementById('lives-icons-container');
-    if (!container) return;
-    container.innerHTML = '';
-    for (let i = 0; i < lives; i++) {
-        const heart = document.createElement('span');
-        heart.innerText = '♥'; 
-        heart.style.color = '#ff3333'; 
-        heart.style.fontSize = '20px'; 
-        heart.style.margin = '0 2px'; 
-        heart.style.textShadow = '0 0 5px #ff3333'; 
-        container.appendChild(heart);
+    clearInterval(timerInterval);
+   
+    if (win) {
+        victorySnd.currentTime = 0;
+        victorySnd.play().catch(() => console.log("Error victoria"));
+    } else {
+        gameOverSnd.currentTime = 0;
+        gameOverSnd.play().catch(() => console.log("Error derrota"));
     }
+    setTimeout(resetGame, 3000); //
 }
 
-// Inicialización
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function resetGame() {
+    score = 0;
+    lives = 3;
+    energy = 100;
+    projectiles = [];
+    enemyProjectiles = [];
+    alienDir = 1;
+    player.x = canvas.width / 2 - 25;
+    initAliens();
+    startTimer();
+    gameRunning = true;
+}
+
 initAliens();
-initStars();
-actualizarCorazones();
-iniciarCrono();
-draw();
+startTimer();
+loop();

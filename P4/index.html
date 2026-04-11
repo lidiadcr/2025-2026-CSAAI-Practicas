@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat The Word - Práctica</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1 class="logo">Beat The Word</h1>
+            <p class="subtitle">Sigue la secuencia al ritmo del Beat</p>
+
+            <div class="config-card">
+                <h3>Configuración</h3>
+                <div class="control-group">
+                    <label>Secuencia</label>
+                    <select id="select-secuencia">
+                        <option value="cama-casa">Cama / Casa</option>
+                        <option value="queso-beso">Queso / Beso</option> 
+                        <option value="palo-pelo">Palo / Pelo </option>
+                        <option value="moto-mono">Moto / Mono </option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Nivel inicial</label>
+                    <select id="select-nivel">
+                        <option value="1">Nivel 1</option>
+                        <option value="2">Nivel 2</option>
+                        <option value="3">Nivel 3</option>
+                        <option value="4">Nivel 4</option>
+                        <option value="5">Nivel 5</option>
+                        <option value="6">Nivel 6</option>
+                    </select>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="show-titles" checked>
+                    <label for="show-titles">Mostrar título en las tarjetas</label>
+                </div>
+            </div>
+
+            <div class="main-buttons">
+                <button id="btn-start" class="btn-primary">Empezar partida</button>
+                <button id="btn-stop" class="btn-secondary" disabled>Detener</button>
+            </div>
+        </aside>
+
+        <main class="game-area">
+            <div class="top-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Nivel</span>
+                    <span id="display-nivel" class="stat-value">1/6</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Tiempo</span>
+                    <span id="display-tiempo" class="stat-value">0.0s</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Estado</span>
+                    <span id="display-estado" class="stat-value">En espera</span>
+                </div>
+            </div>
+
+            <div class="play-zone">
+                <button id="btn-music" class="music-btn">🎵 Música: ON</button>
+                
+                <div id="main-feedback" class="feedback-area">
+                    <div class="emoji-preview">😆</div>
+                    <div class="feedback-text">
+                        <h2 id="feedback-word">1/6</h2>
+                        <span id="feedback-instruction" class="badge">Pulsa "Empezar"</span>
+                    </div>
+                </div>
+
+                <div class="grid" id="game-grid">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <audio id="bg-music" loop src="video_recortado.mp4"></audio>
+    <audio id="victory-music"  src="victoria.mp3"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -206,3 +206,8 @@ select {
     display: block;
     margin-top: 20px;
 }
+
+.config-card h2 {
+    font-size: 1rem;
+    margin: 0 0 10px 0;
+}

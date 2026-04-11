@@ -1,3 +1,4 @@
+/* jshint esversion: 8 */
 const BPM = 140; 
 const BEAT_DURATION = (60 / BPM) * 1000; 
 const VIDEO_INTRO_DELAY = 2700; 

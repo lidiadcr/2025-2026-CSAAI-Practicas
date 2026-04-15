@@ -25,6 +25,25 @@
 
             <canvas id="gameCanvas"></canvas>
 
+            <div id="mobile-controls" class="mobile-only">
+                <div id="touch-joystick">
+                    <button class="touch-btn" id="btn-up">▲</button>
+                    <div class="side-btns">
+                        <button class="touch-btn" id="btn-left">◀</button>
+                        <button class="touch-btn" id="btn-right">▶</button>
+                    </div>
+                    <button class="touch-btn" id="btn-down">▼</button>
+                </div>
+                
+                <div id="touch-actions">
+                    <button class="touch-btn shoot-btn" id="btn-shoot">CHUT</button>
+                    <div class="rotation-btns">
+                        <button class="touch-btn" id="btn-rot-l">↺</button>
+                        <button class="touch-btn" id="btn-rot-r">↻</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="overlay-menu" class="overlay">
                 <h2>Bot League</h2>
                 <p>Elige modo de juego:</p>
@@ -39,14 +58,14 @@
                 <div id="countdown-display"></div>
                 
                 <div id="final-buttons" class="hidden">
-                    <button onclick="location.reload()">Pulsa R para reiniciar</button>
-                    <button onclick="showMenu()">Pulsa M para volver al menú</button>
+                    <button onclick="location.reload()">Reiniciar</button>
+                    <button onclick="showMenu()">Volver al menú</button>
                 </div>
             </div>
         </div>
 
         <footer id="game-controls-bar">
-            <strong>Controles:</strong> Flechas para mover · A/D para girar la dirección · Espacio para chutar
+            <strong>Controles:</strong> Flechas para mover · A/D para girar · Espacio para chutar
         </footer>
     </div>
 

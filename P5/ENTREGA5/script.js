@@ -4,6 +4,43 @@ const ctx = canvas.getContext('2d');
 canvas.width = 800;
 canvas.height = 400;
 
+// --- CONTROLES TÁCTILES PARA MÓVIL ---
+const mobileBtnMapping = {
+    'btn-up': 'ArrowUp',
+    'btn-down': 'ArrowDown',
+    'btn-left': 'ArrowLeft',
+    'btn-right': 'ArrowRight',
+    'btn-shoot': ' ',
+    'btn-rot-l': 'a',
+    'btn-rot-r': 'd'
+};
+Object.keys(mobileBtnMapping).forEach(btnId => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+        // Al tocar el botón
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            keys[mobileBtnMapping[btnId]] = true;
+            if (btnId === 'btn-shoot') shootBall(); // Disparo directo
+        });
+        // Al soltar el botón
+        btn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            keys[mobileBtnMapping[btnId]] = false;
+        });
+    }
+});
+
+
+// Desbloquear audio en móviles con el primer toque
+document.addEventListener('touchstart', function unlockAudio() {
+    goalSound.play().then(() => { goalSound.pause(); });
+    victorySound.play().then(() => { victorySound.pause(); });
+    document.removeEventListener('touchstart', unlockAudio);
+}, { once: true });
+
+
+
 // --- VARIABLES DE ESTADO ---
 let gameRunning = false;
 let gameMode = 0; 

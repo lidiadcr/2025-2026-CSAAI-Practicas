@@ -79,7 +79,9 @@ body {
 }
 
 canvas {
-    display: block;
+    max-width: 100%;
+    height: auto;
+    touch-action: none; /* Evita que el navegador haga scroll al tocar el juego */
 }
 
 /* Marcador Central Estilo Arcade */
@@ -153,4 +155,39 @@ button:hover {
     font-family: 'Courier New', Courier, monospace;
     margin-top: 5px;
     text-shadow: 2px 2px 0px #000;
+}
+
+.mobile-only {
+    display: none;
+    user-select: none;
+}
+
+/* Mostrar solo en pantallas pequeñas */
+@media (max-width: 900px) {
+    .mobile-only {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .touch-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        color: white;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .shoot-btn {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 0, 0, 0.4);
+        font-weight: bold;
+    }
 }

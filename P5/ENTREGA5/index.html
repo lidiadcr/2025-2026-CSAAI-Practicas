@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bot League - Práctica 5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-outer-wrapper">
+        <header id="game-header">
+            <h1>Bot League</h1>
+            <p>Versión 0 · Movimiento, dirección y chut</p>
+        </header>
+
+        <div id="game-container">
+            <div id="central-scoreboard">
+                <div class="score-row">
+                    <span id="score-player">0</span> - <span id="score-bot">0</span>
+                </div>
+                <div id="game-timer">Tiempo: 00:00</div>
+                <div id="game-mode-text">A 3 goles</div>
+            </div>
+
+            <canvas id="gameCanvas"></canvas>
+
+            <div id="overlay-menu" class="overlay">
+                <h2>Bot League</h2>
+                <p>Elige modo de juego:</p>
+                <div class="menu-buttons">
+                    <button onclick="startGame(1)">Pulsa 1: Partido a 3 goles</button>
+                    <button onclick="startGame(2)">Pulsa 2: Gol de oro</button>
+                </div>
+            </div>
+
+            <div id="overlay-message" class="overlay hidden">
+                <h2 id="status-text">¡PREPARADOS!</h2>
+                <div id="countdown-display"></div>
+                
+                <div id="final-buttons" class="hidden">
+                    <button onclick="location.reload()">Pulsa R para reiniciar</button>
+                    <button onclick="showMenu()">Pulsa M para volver al menú</button>
+                </div>
+            </div>
+        </div>
+
+        <footer id="game-controls-bar">
+            <strong>Controles:</strong> Flechas para mover · A/D para girar la dirección · Espacio para chutar
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

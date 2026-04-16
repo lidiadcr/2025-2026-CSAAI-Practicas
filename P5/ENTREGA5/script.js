@@ -38,12 +38,6 @@ Object.keys(mobileBtnMapping).forEach(btnId => {
 });
 
 
-// Desbloquear audio en móviles con el primer toque
-document.addEventListener('touchstart', function unlockAudio() {
-    goalSound.play().then(() => { goalSound.pause(); });
-    victorySound.play().then(() => { victorySound.pause(); });
-    document.removeEventListener('touchstart', unlockAudio);
-}, { once: true });
 
 
 
@@ -76,10 +70,16 @@ window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 // --- FUNCIONES DE MENÚ Y CONTROL ---
 window.startGame = function(mode) {
-    // --- DESBLOQUEO DE AUDIO PARA NAVEGADORES ---
-    // Al interactuar con el botón, le damos permiso al navegador para sonar
-    goalSound.play().then(() => { goalSound.pause(); }).catch(e => console.log("Audio esperando interacción"));
-    victorySound.play().then(() => { victorySound.pause(); }).catch(e => console.log("Audio esperando interacción"));
+    // Esto "prepara" los archivos sin que lleguen a sonar (volumen 0 o pausa inmediata)
+    goalSound.play().then(() => { 
+        goalSound.pause(); 
+        goalSound.currentTime = 0; 
+    }).catch(e => console.log("Audio prep"));
+    
+    victorySound.play().then(() => { 
+        victorySound.pause(); 
+        victorySound.currentTime = 0; 
+    }).catch(e => console.log("Audio prep"));
 
     gameMode = mode;
     scorePlayer = 0; scoreBot = 0;

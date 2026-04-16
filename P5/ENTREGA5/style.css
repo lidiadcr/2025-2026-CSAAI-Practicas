@@ -159,8 +159,10 @@ button:hover {
 
 .mobile-only {
     display: none;
-    user-select: none;
-    -webkit-user-select: none;
+    user-select: none; /* Estándar */
+    -webkit-user-select: none; /* Safari/Chrome */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge antiguo */
 }
 
 /* Mostrar solo en pantallas pequeñas */

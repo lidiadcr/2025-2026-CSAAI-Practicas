@@ -1,3 +1,5 @@
+/* jshint esversion: 6 */
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -5,10 +7,12 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
     const maxW = Math.min(800, window.innerWidth - 10);
     canvas.width = maxW;
-    canvas.height = Math.round(maxW * 0.5); // mantener ratio 2:1
+    canvas.height = Math.round(maxW * 0.5);
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+
+const keys = {};
 
 // --- CONTROLES TÁCTILES PARA MÓVIL ---
 const mobileBtnMapping = {
@@ -20,6 +24,7 @@ const mobileBtnMapping = {
     'btn-rot-l': 'KeyA',
     'btn-rot-r': 'KeyD'
 };
+
 Object.keys(mobileBtnMapping).forEach(btnId => {
     const btn = document.getElementById(btnId);
     if (btn) {
@@ -31,14 +36,14 @@ Object.keys(mobileBtnMapping).forEach(btnId => {
             e.preventDefault();
             keys[mobileBtnMapping[btnId]] = false;
         }, { passive: false });
-        btn.addEventListener('mousedown', (e) => { keys[mobileBtnMapping[btnId]] = true; });
-        btn.addEventListener('mouseup', (e) => { keys[mobileBtnMapping[btnId]] = false; });
+        btn.addEventListener('mousedown', () => { keys[mobileBtnMapping[btnId]] = true; });
+        btn.addEventListener('mouseup', () => { keys[mobileBtnMapping[btnId]] = false; });
     }
 });
 
 // --- VARIABLES DE ESTADO ---
 let gameRunning = false;
-let gameMode = 0; 
+let gameMode = 0;
 let scorePlayer = 0;
 let scoreBot = 0;
 let botsCanMove = false;
@@ -47,43 +52,55 @@ let timerInterval = null;
 const goalSound = new Audio('gol.m4a');
 const victorySound = new Audio('victoria.mp3');
 
-// --- FUNCIONES DE MENÚ Y CONTROL ---
-window.startGame = function(mode) {
-    // CAMBIO AQUÍ: Desbloqueo silencioso para móviles
-    [goalSound, victorySound].forEach(sound => {
-        sound.play().then(() => {
-            sound.pause();
-            sound.currentTime = 0;
-            sound.volume = 1; // Restauramos volumen para cuando deba sonar de verdad
-        }).catch(e => console.log("Audio prep silent"));
-        sound.volume = 0; // Silencio total durante el desbloqueo inicial
-    });
+// --- FUNCIONES DE POSICIONAMIENTO Y ESTADO ---
+function resetPositions() {
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const w = canvas.width;
+    ball.x = cx; ball.y = cy; ball.dx = 0; ball.dy = 0;
+    player.x = cx * 0.6; player.y = cy;
+    playerGoalkeeper.x = w * 0.06; playerGoalkeeper.y = cy;
+    bots[0].x = cx * 1.4; bots[0].y = cy;
+    bots[1].x = w * 0.94; bots[1].y = cy;
+}
 
-    gameMode = mode;
-    scorePlayer = 0; scoreBot = 0;
-    secondsElapsed = 0; 
-    
-    document.getElementById('score-player').innerText = "0";
-    document.getElementById('score-bot').innerText = "0";
-    document.getElementById('game-timer').innerText = "Tiempo: 00:00";
-    
-    document.getElementById('overlay-menu').classList.add('hidden');
-    document.getElementById('final-buttons').classList.add('hidden');
-    
-    resetPositions();
-    startCountdown();
-    
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(updateTimer, 1000);
-};
-
-window.showMenu = function() {
+// Definimos showMenu como función normal para que el validador no diga que es indefinida
+function showMenu() {
     gameRunning = false;
     victorySound.pause();
     victorySound.currentTime = 0;
     document.getElementById('overlay-message').classList.add('hidden');
     document.getElementById('overlay-menu').classList.remove('hidden');
     resetPositions();
+}
+window.showMenu = showMenu;
+
+// --- FUNCIONES DE MENÚ Y CONTROL ---
+window.startGame = function(mode) {
+    [goalSound, victorySound].forEach(sound => {
+        sound.play().then(() => {
+            sound.pause();
+            sound.currentTime = 0;
+            sound.volume = 1;
+        }).catch(() => {});
+        sound.volume = 0;
+    });
+
+    gameMode = mode;
+    scorePlayer = 0; scoreBot = 0;
+    secondsElapsed = 0;
+   
+    document.getElementById('score-player').innerText = "0";
+    document.getElementById('score-bot').innerText = "0";
+    document.getElementById('game-timer').innerText = "Tiempo: 00:00";
+   
+    document.getElementById('overlay-menu').classList.add('hidden');
+    document.getElementById('final-buttons').classList.add('hidden');
+   
+    resetPositions();
+    startCountdown();
+   
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
 };
 
 // --- EL RESTO DEL CÓDIGO SE MANTIENE IGUAL ---
@@ -95,7 +112,6 @@ const bots = [
     { x: 0, y: 0, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
 ];
 
-const keys = {};
 window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -111,7 +127,7 @@ function startCountdown() {
     const countdownDisp = document.getElementById('countdown-display');
     overlay.classList.remove('hidden');
     document.getElementById('status-text').innerText = "¡PREPARADOS!";
-    
+   
     const timer = setInterval(() => {
         countdownDisp.innerText = count;
         if (count <= 0) {
@@ -125,30 +141,22 @@ function startCountdown() {
     }, 800);
 }
 
-function resetPositions() {
-    const cx = canvas.width / 2, cy = canvas.height / 2;
-    const w = canvas.width, h = canvas.height;
-    ball.x = cx; ball.y = cy; ball.dx = 0; ball.dy = 0;
-    player.x = cx * 0.6; player.y = cy;
-    playerGoalkeeper.x = w * 0.06; playerGoalkeeper.y = cy;
-    bots[0].x = cx * 1.4; bots[0].y = cy;
-    bots[1].x = w * 0.94; bots[1].y = cy;
-}
-
 function update() {
     if (!gameRunning) return;
     const w = canvas.width, h = canvas.height;
     const goalTop = h * 0.375, goalBot = h * 0.625;
 
-    if (keys['ArrowUp'] && player.y > player.radius) player.y -= player.speed;
-    if (keys['ArrowDown'] && player.y < h - player.radius) player.y += player.speed;
-    if (keys['ArrowLeft'] && player.x > player.radius) player.x -= player.speed;
-    if (keys['ArrowRight'] && player.x < w - player.radius) player.x += player.speed;
+    // Cambiado a notación de punto para el validador
+    if (keys.ArrowUp && player.y > player.radius) player.y -= player.speed;
+    if (keys.ArrowDown && player.y < h - player.radius) player.y += player.speed;
+    if (keys.ArrowLeft && player.x > player.radius) player.x -= player.speed;
+    if (keys.ArrowRight && player.x < w - player.radius) player.x += player.speed;
+   
     keepInBounds(player);
-    if (keys['KeyA']) player.angle -= 0.05;
-    if (keys['KeyD']) player.angle += 0.05;
+    if (keys.KeyA) player.angle -= 0.05;
+    if (keys.KeyD) player.angle += 0.05;
 
-    if (keys['Space']) {
+    if (keys.Space) {
         let dist = Math.hypot(ball.x - player.x, ball.y - player.y);
         if (dist < player.radius + ball.radius + 20) {
             ball.dx = Math.cos(player.angle) * 15;
@@ -160,10 +168,10 @@ function update() {
     allAI.forEach(b => {
         if (!botsCanMove) return;
         let targetX, targetY;
-        if (b.type === 'portero_rojo') { 
-            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
-        } else if (b.type === 'portero_azul') { 
-            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
+        if (b.type === 'portero_rojo') {
+            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
+        } else if (b.type === 'portero_azul') {
+            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
         } else {
             const movedDist = Math.hypot(b.x - b.lastX, b.y - b.lastY);
             if (movedDist < 0.4) b.stuckTimer++;
@@ -202,7 +210,7 @@ function update() {
         if (ball.y > goalTop && ball.y < goalBot) {
             if (ball.x < 0) { scoreBot++; showMessage("¡GOL RIVAL!"); }
             else { scorePlayer++; showMessage("¡GOOOL!"); }
-        } else { 
+        } else {
             ball.dx *= -1.2; ball.x = ball.x < 0 ? 15 : w - 15;
         }
     }
@@ -218,13 +226,13 @@ function showMessage(txt) {
     document.getElementById('score-bot').innerText = scoreBot;
     document.getElementById('status-text').innerText = txt;
     document.getElementById('overlay-message').classList.remove('hidden');
-    
+   
     if (txt === "¡GOOOL!" || txt === "¡GOL RIVAL!") {
         goalSound.currentTime = 0;
         goalSound.play();
     }
 
-    const isGameOver = (gameMode === 1 && (scorePlayer >= 3 || scoreBot >= 3)) || 
+    const isGameOver = (gameMode === 1 && (scorePlayer >= 3 || scoreBot >= 3)) ||
                        (gameMode === 2 && (scorePlayer >= 1 || scoreBot >= 1));
 
     if (isGameOver) {
@@ -241,7 +249,7 @@ function stopGoalSound() {
 
 function endGame() {
     gameRunning = false;
-    clearInterval(timerInterval);
+    if (timerInterval) clearInterval(timerInterval);
     const win = scorePlayer > scoreBot;
     document.getElementById('status-text').innerText = win ? "¡VICTORIA!" : "DERROTA...";
     document.getElementById('final-buttons').classList.remove('hidden');
@@ -300,6 +308,5 @@ function draw() {
 function drawCircle(x, y, r, c) {
     ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
 }
-
 
 draw();

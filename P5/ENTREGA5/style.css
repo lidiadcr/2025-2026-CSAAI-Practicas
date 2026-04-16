@@ -160,34 +160,84 @@ button:hover {
 .mobile-only {
     display: none;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 /* Mostrar solo en pantallas pequeñas */
 @media (max-width: 900px) {
+    body {
+        overflow-y: auto;
+    }
+
     .mobile-only {
         display: flex;
-        justify-content: space-around;
+        justify-content: space-between;
+        align-items: center;
         width: 100%;
-        margin-top: 10px;
+        padding: 10px 5px;
+        box-sizing: border-box;
+        gap: 10px;
     }
-    
+
+    #touch-joystick {
+        display: grid;
+        grid-template-columns: 56px 56px 56px;
+        grid-template-rows: 56px 56px 56px;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    #btn-up    { grid-column: 2; grid-row: 1; }
+    #btn-left  { grid-column: 1; grid-row: 2; }
+    #btn-right { grid-column: 3; grid-row: 2; }
+    #btn-down  { grid-column: 2; grid-row: 3; }
+
+    #touch-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .rotation-btns {
+        display: flex;
+        gap: 8px;
+    }
+
     .touch-btn {
         background: rgba(255, 255, 255, 0.2);
-        border: 2px solid white;
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
+        border: 2px solid rgba(255,255,255,0.8);
+        border-radius: 12px;
+        width: 52px;
+        height: 52px;
         color: white;
-        font-size: 20px;
+        font-size: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        active-opacity: 0.5;
+    }
+
+    .touch-btn:active {
+        background: rgba(255, 255, 255, 0.5);
+        transform: scale(0.92);
     }
 
     .shoot-btn {
         width: 80px;
-        height: 80px;
-        background: rgba(255, 0, 0, 0.4);
+        height: 60px;
+        background: rgba(255, 50, 50, 0.5);
         font-weight: bold;
+        font-size: 16px;
+        border-radius: 16px;
+        border-color: #ff6666;
+    }
+
+    #game-controls-bar {
+        display: none; /* en móvil no hace falta el texto de controles */
     }
 }

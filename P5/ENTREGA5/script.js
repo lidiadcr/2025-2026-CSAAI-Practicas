@@ -1,8 +1,14 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-canvas.width = 800;
-canvas.height = 400;
+// Canvas responsivo
+function resizeCanvas() {
+    const maxW = Math.min(800, window.innerWidth - 10);
+    canvas.width = maxW;
+    canvas.height = Math.round(maxW * 0.5); // mantener ratio 2:1
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // --- CONTROLES TÁCTILES PARA MÓVIL ---
 const mobileBtnMapping = {
@@ -10,24 +16,24 @@ const mobileBtnMapping = {
     'btn-down': 'ArrowDown',
     'btn-left': 'ArrowLeft',
     'btn-right': 'ArrowRight',
-    'btn-shoot': ' ',
-    'btn-rot-l': 'a',
-    'btn-rot-r': 'd'
+    'btn-shoot': 'Space',
+    'btn-rot-l': 'KeyA',
+    'btn-rot-r': 'KeyD'
 };
 Object.keys(mobileBtnMapping).forEach(btnId => {
     const btn = document.getElementById(btnId);
     if (btn) {
-        // Al tocar el botón
         btn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             keys[mobileBtnMapping[btnId]] = true;
-            if (btnId === 'btn-shoot') shootBall(); // Disparo directo
-        });
-        // Al soltar el botón
+        }, { passive: false });
         btn.addEventListener('touchend', (e) => {
             e.preventDefault();
             keys[mobileBtnMapping[btnId]] = false;
-        });
+        }, { passive: false });
+        // Soporte mouse para pruebas en PC
+        btn.addEventListener('mousedown', (e) => { keys[mobileBtnMapping[btnId]] = true; });
+        btn.addEventListener('mouseup', (e) => { keys[mobileBtnMapping[btnId]] = false; });
     }
 });
 
@@ -53,19 +59,20 @@ const goalSound = new Audio('gol.m4a');
 const victorySound = new Audio('victoria.mp3'); // <--- NUEVO: Carga del audio de victoria
 
 // --- OBJETOS DEL JUEGO ---
-const ball = { x: 400, y: 200, radius: 12, dx: 0, dy: 0, friction: 0.98 };
+// Las posiciones se calculan relativas al canvas en resetPositions()
+const ball = { x: 0, y: 0, radius: 12, dx: 0, dy: 0, friction: 0.98 };
 
-const player = { x: 250, y: 200, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
-const playerGoalkeeper = { x: 50, y: 200, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
+const player = { x: 0, y: 0, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
+const playerGoalkeeper = { x: 0, y: 0, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
 
 const bots = [
-    { x: 550, y: 200, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo' },
-    { x: 750, y: 200, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
+    { x: 0, y: 0, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo' },
+    { x: 0, y: 0, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
 ];
 
 const keys = {};
-window.addEventListener('keydown', e => keys[e.code] = true);
-window.addEventListener('keyup', e => keys[e.code] = false);
+window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 // --- FUNCIONES DE MENÚ Y CONTROL ---
 window.startGame = function(mode) {
@@ -126,22 +133,26 @@ function startCountdown() {
 }
 
 function resetPositions() {
-    ball.x = 400; ball.y = 200; ball.dx = 0; ball.dy = 0;
-    player.x = 250; player.y = 200;
-    playerGoalkeeper.x = 50; playerGoalkeeper.y = 200;
-    bots[0].x = 550; bots[0].y = 200;
-    bots[1].x = 750; bots[1].y = 200;
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    const w = canvas.width, h = canvas.height;
+    ball.x = cx; ball.y = cy; ball.dx = 0; ball.dy = 0;
+    player.x = cx * 0.6; player.y = cy;
+    playerGoalkeeper.x = w * 0.06; playerGoalkeeper.y = cy;
+    bots[0].x = cx * 1.4; bots[0].y = cy;
+    bots[1].x = w * 0.94; bots[1].y = cy;
 }
 
-// --- LÓGICA DEL JUEGO ---
 function update() {
     if (!gameRunning) return;
 
+    const w = canvas.width, h = canvas.height;
+    const goalTop = h * 0.375, goalBot = h * 0.625; // portería: 25% del alto centrada
+
     // Movimiento Jugador
     if (keys['ArrowUp'] && player.y > player.radius) player.y -= player.speed;
-    if (keys['ArrowDown'] && player.y < canvas.height - player.radius) player.y += player.speed;
+    if (keys['ArrowDown'] && player.y < h - player.radius) player.y += player.speed;
     if (keys['ArrowLeft'] && player.x > player.radius) player.x -= player.speed;
-    if (keys['ArrowRight'] && player.x < canvas.width - player.radius) player.x += player.speed;
+    if (keys['ArrowRight'] && player.x < w - player.radius) player.x += player.speed;
     
     if (keys['KeyA']) player.angle -= 0.05;
     if (keys['KeyD']) player.angle += 0.05;
@@ -162,9 +173,9 @@ function update() {
         
         let targetX, targetY;
         if (b.type === 'portero_rojo') { 
-            targetX = 760; targetY = Math.max(150, Math.min(250, ball.y)); 
+            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
         } else if (b.type === 'portero_azul') { 
-            targetX = 40; targetY = Math.max(150, Math.min(250, ball.y)); 
+            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
         } else { 
             targetX = ball.x; targetY = ball.y; 
         }
@@ -174,7 +185,6 @@ function update() {
         if (b.y < targetY) b.y += b.speed;
         if (b.y > targetY) b.y -= b.speed;
 
-        // Colisión Bot-Balón (Empuje)
         let d = Math.hypot(ball.x - b.x, ball.y - b.y);
         if (d < b.radius + ball.radius) {
             ball.dx = (ball.x - b.x) * 0.5;
@@ -182,7 +192,7 @@ function update() {
         }
     });
 
-    // Colisión Jugador-Balón (Empuje suave)
+    // Colisión Jugador-Balón
     let dPl = Math.hypot(ball.x - player.x, ball.y - player.y);
     if (dPl < player.radius + ball.radius) {
         ball.dx = (ball.x - player.x) * 0.5;
@@ -194,18 +204,18 @@ function update() {
     ball.dx *= ball.friction; ball.dy *= ball.friction;
 
     // Goles y límites
-    if (ball.x < 0 || ball.x > canvas.width) {
-        if (ball.y > 150 && ball.y < 250) {
+    if (ball.x < 0 || ball.x > w) {
+        if (ball.y > goalTop && ball.y < goalBot) {
             if (ball.x < 0) { scoreBot++; showMessage("¡GOL RIVAL!"); }
             else { scorePlayer++; showMessage("¡GOOOL!"); }
         } else { 
-            ball.dx *= -1; // Rebote si no es gol
-            ball.x = ball.x < 0 ? 5 : canvas.width - 5;
+            ball.dx *= -1;
+            ball.x = ball.x < 0 ? 5 : w - 5;
         }
     }
-    if (ball.y < 0 || ball.y > canvas.height) {
+    if (ball.y < 0 || ball.y > h) {
         ball.dy *= -1;
-        ball.y = ball.y < 0 ? 5 : canvas.height - 5;
+        ball.y = ball.y < 0 ? 5 : h - 5;
     }
 }
 
@@ -282,19 +292,22 @@ function updateTimer() {
     document.getElementById('game-timer').innerText = `Tiempo: ${mins}:${secs}`;
 }
 
-// --- DIBUJO ---
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.width, h = canvas.height;
+    const goalTop = h * 0.375, goalBot = h * 0.625;
+
+    ctx.clearRect(0, 0, w, h);
     
     // Campo
     ctx.strokeStyle = "white"; ctx.lineWidth = 2;
-    ctx.strokeRect(5, 5, canvas.width-10, canvas.height-10);
-    ctx.beginPath(); ctx.moveTo(400, 0); ctx.lineTo(400, 400); ctx.stroke();
-    ctx.beginPath(); ctx.arc(400, 200, 60, 0, Math.PI*2); ctx.stroke();
+    ctx.strokeRect(5, 5, w-10, h-10);
+    ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+    ctx.beginPath(); ctx.arc(w/2, h/2, h*0.15, 0, Math.PI*2); ctx.stroke();
     
     // Porterías
     ctx.fillStyle = "rgba(255,255,255,0.3)";
-    ctx.fillRect(0, 150, 15, 100); ctx.fillRect(785, 150, 15, 100); 
+    ctx.fillRect(0, goalTop, 15, goalBot - goalTop);
+    ctx.fillRect(w - 15, goalTop, 15, goalBot - goalTop);
 
     // Jugadores
     drawCircle(player.x, player.y, player.radius, player.color);
@@ -309,7 +322,7 @@ function draw() {
     ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(18, -6); ctx.lineTo(18, 6); ctx.fill();
     ctx.restore();
 
-    // Balón (EMOJI ⚽)
+    // Balón
     ctx.save();
     ctx.translate(ball.x, ball.y);
     ctx.font = `${ball.radius * 2.5}px Arial`;

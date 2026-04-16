@@ -60,7 +60,7 @@ const player = { x: 0, y: 0, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
 const playerGoalkeeper = { x: 0, y: 0, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
 
 const bots = [
-    { x: 0, y: 0, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo' },
+    { x: 0, y: 0, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo', stuckTimer: 0, lastX: 0, lastY: 0, detourDir: 1 },
     { x: 0, y: 0, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
 ];
 
@@ -146,18 +146,18 @@ function update() {
     if (!gameRunning) return;
 
     const w = canvas.width, h = canvas.height;
-    const goalTop = h * 0.375, goalBot = h * 0.625; // portería: 25% del alto centrada
+    const goalTop = h * 0.375, goalBot = h * 0.625;
 
-    // Movimiento Jugador
+    // --- 1. MOVIMIENTO JUGADOR AZUL ---
     if (keys['ArrowUp'] && player.y > player.radius) player.y -= player.speed;
     if (keys['ArrowDown'] && player.y < h - player.radius) player.y += player.speed;
     if (keys['ArrowLeft'] && player.x > player.radius) player.x -= player.speed;
     if (keys['ArrowRight'] && player.x < w - player.radius) player.x += player.speed;
-    
+    keepInBounds(player);
     if (keys['KeyA']) player.angle -= 0.05;
     if (keys['KeyD']) player.angle += 0.05;
 
-    // Chutar
+    // --- 2. CHUT JUGADOR ---
     if (keys['Space']) {
         let dist = Math.hypot(ball.x - player.x, ball.y - player.y);
         if (dist < player.radius + ball.radius + 20) {
@@ -166,56 +166,109 @@ function update() {
         }
     }
 
-    // IA de los Bots y Porteros
+    // --- 3. IA DE BOTS Y PORTEROS ---
     const allAI = [...bots, playerGoalkeeper];
     allAI.forEach(b => {
         if (!botsCanMove) return;
         
         let targetX, targetY;
         if (b.type === 'portero_rojo') { 
-            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
+            targetX = w * 0.95; 
+            targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
         } else if (b.type === 'portero_azul') { 
-            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
-        } else { 
-            targetX = ball.x; targetY = ball.y; 
+            targetX = w * 0.05; 
+            targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
+        } else {
+            // --- BOT ATACANTE ROJO: siempre persigue el balón, rodeo si se atasca ---
+
+            // Detectar si el bot lleva tiempo sin moverse (atascado)
+            const movedDist = Math.hypot(b.x - b.lastX, b.y - b.lastY);
+            if (movedDist < 0.4) {
+                b.stuckTimer++;
+            } else {
+                b.stuckTimer = Math.max(0, b.stuckTimer - 3);
+            }
+            b.lastX = b.x;
+            b.lastY = b.y;
+
+            // Si lleva ~50 frames atascado, cambiar dirección de rodeo
+            if (b.stuckTimer > 50) {
+                b.stuckTimer = 0;
+                b.detourDir *= -1;
+            }
+
+            // Target principal: siempre el balón, llegando por detrás para empujarlo
+            if (b.x > ball.x) {
+                // Está bien posicionado: apuntar justo detrás del balón para empujarlo a la izquierda
+                targetX = ball.x - 5;
+                targetY = ball.y;
+            } else {
+                // Se le escapó por delante: reposicionarse detrás
+                targetX = ball.x + 50;
+                targetY = ball.y;
+            }
+
+            // Si está atascado, añadir desplazamiento lateral perpendicular para rodearlo
+            if (b.stuckTimer > 20) {
+                targetX += 30 * b.detourDir;
+                targetY += 60 * b.detourDir;
+            }
         }
 
-        if (b.x < targetX) b.x += b.speed;
-        if (b.x > targetX) b.x -= b.speed;
-        if (b.y < targetY) b.y += b.speed;
-        if (b.y > targetY) b.y -= b.speed;
+        // Movimiento VECTORIAL: mueve en diagonal a velocidad constante hacia el target
+        const dx = targetX - b.x;
+        const dy = targetY - b.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 1) {
+            b.x += (dx / dist) * b.speed;
+            b.y += (dy / dist) * b.speed;
+        }
+        keepInBounds(b);
 
+        // --- COLISIÓN IA-BALÓN (CON SEPARACIÓN Y EMPUJE) ---
         let d = Math.hypot(ball.x - b.x, ball.y - b.y);
-        if (d < b.radius + ball.radius) {
-            ball.dx = (ball.x - b.x) * 0.5;
-            ball.dy = (ball.y - b.y) * 0.5;
+        let minDist = b.radius + ball.radius;
+        if (d < minDist) {
+            let angle = Math.atan2(ball.y - b.y, ball.x - b.x);
+            
+            // Empujón físico: movemos el balón fuera del bot
+            let overlap = minDist - d;
+            ball.x += Math.cos(angle) * (overlap + 2);
+            ball.y += Math.sin(angle) * (overlap + 2);
+
+            // Fuerza de salida
+            ball.dx = Math.cos(angle) * 4; // Fuerza constante para que no se pare
+            ball.dy = Math.sin(angle) * 4;
         }
     });
 
-    // Colisión Jugador-Balón
+    // --- 4. COLISIÓN JUGADOR-BALÓN ---
     let dPl = Math.hypot(ball.x - player.x, ball.y - player.y);
     if (dPl < player.radius + ball.radius) {
-        ball.dx = (ball.x - player.x) * 0.5;
-        ball.dy = (ball.y - player.y) * 0.5;
+        let angle = Math.atan2(ball.y - player.y, ball.x - player.x);
+        ball.dx = Math.cos(angle) * 2 + (ball.x - player.x) * 0.5;
+        ball.dy = Math.sin(angle) * 2 + (ball.y - player.y) * 0.5;
     }
 
-    // Movimiento y fricción del balón
+    // --- 5. FÍSICA Y FRICCIÓN ---
     ball.x += ball.dx; ball.y += ball.dy;
     ball.dx *= ball.friction; ball.dy *= ball.friction;
 
-    // Goles y límites
+    // --- 6. GOLES Y REBOTES ---
     if (ball.x < 0 || ball.x > w) {
         if (ball.y > goalTop && ball.y < goalBot) {
             if (ball.x < 0) { scoreBot++; showMessage("¡GOL RIVAL!"); }
             else { scorePlayer++; showMessage("¡GOOOL!"); }
         } else { 
-            ball.dx *= -1;
-            ball.x = ball.x < 0 ? 5 : w - 5;
+            ball.dx *= -1.2;
+            ball.x = ball.x < 0 ? 15 : w - 15;
         }
     }
     if (ball.y < 0 || ball.y > h) {
-        ball.dy *= -1;
-        ball.y = ball.y < 0 ? 5 : h - 5;
+        ball.dy *= -1.2;
+        ball.y = ball.y < 0 ? 15 : h - 15;
+        // Ayuda para que el balón no se quede muerto en la banda
+        if (Math.abs(ball.dx) < 1) ball.dx = (ball.x > w/2 ? -2 : 2);
     }
 }
 
@@ -291,6 +344,20 @@ function updateTimer() {
     const secs = (secondsElapsed % 60).toString().padStart(2, '0');
     document.getElementById('game-timer').innerText = `Tiempo: ${mins}:${secs}`;
 }
+
+
+function keepInBounds(obj) {
+    const w = canvas.width, h = canvas.height;
+    // Límite Izquierdo
+    if (obj.x < obj.radius) obj.x = obj.radius;
+    // Límite Derecho
+    if (obj.x > w - obj.radius) obj.x = w - obj.radius;
+    // Límite Superior
+    if (obj.y < obj.radius) obj.y = obj.radius;
+    // Límite Inferior
+    if (obj.y > h - obj.radius) obj.y = h - obj.radius;
+}
+
 
 function draw() {
     const w = canvas.width, h = canvas.height;

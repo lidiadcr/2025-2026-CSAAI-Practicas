@@ -31,15 +31,10 @@ Object.keys(mobileBtnMapping).forEach(btnId => {
             e.preventDefault();
             keys[mobileBtnMapping[btnId]] = false;
         }, { passive: false });
-        // Soporte mouse para pruebas en PC
         btn.addEventListener('mousedown', (e) => { keys[mobileBtnMapping[btnId]] = true; });
         btn.addEventListener('mouseup', (e) => { keys[mobileBtnMapping[btnId]] = false; });
     }
 });
-
-
-
-
 
 // --- VARIABLES DE ESTADO ---
 let gameRunning = false;
@@ -50,36 +45,19 @@ let botsCanMove = false;
 let secondsElapsed = 0;
 let timerInterval = null;
 const goalSound = new Audio('gol.m4a');
-const victorySound = new Audio('victoria.mp3'); // <--- NUEVO: Carga del audio de victoria
-
-// --- OBJETOS DEL JUEGO ---
-// Las posiciones se calculan relativas al canvas en resetPositions()
-const ball = { x: 0, y: 0, radius: 12, dx: 0, dy: 0, friction: 0.98 };
-
-const player = { x: 0, y: 0, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
-const playerGoalkeeper = { x: 0, y: 0, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
-
-const bots = [
-    { x: 0, y: 0, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo', stuckTimer: 0, lastX: 0, lastY: 0, detourDir: 1 },
-    { x: 0, y: 0, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
-];
-
-const keys = {};
-window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
-window.addEventListener('keyup', e => { keys[e.code] = false; });
+const victorySound = new Audio('victoria.mp3');
 
 // --- FUNCIONES DE MENÚ Y CONTROL ---
 window.startGame = function(mode) {
-    // Esto "prepara" los archivos sin que lleguen a sonar (volumen 0 o pausa inmediata)
-    goalSound.play().then(() => { 
-        goalSound.pause(); 
-        goalSound.currentTime = 0; 
-    }).catch(e => console.log("Audio prep"));
-    
-    victorySound.play().then(() => { 
-        victorySound.pause(); 
-        victorySound.currentTime = 0; 
-    }).catch(e => console.log("Audio prep"));
+    // CAMBIO AQUÍ: Desbloqueo silencioso para móviles
+    [goalSound, victorySound].forEach(sound => {
+        sound.play().then(() => {
+            sound.pause();
+            sound.currentTime = 0;
+            sound.volume = 1; // Restauramos volumen para cuando deba sonar de verdad
+        }).catch(e => console.log("Audio prep silent"));
+        sound.volume = 0; // Silencio total durante el desbloqueo inicial
+    });
 
     gameMode = mode;
     scorePlayer = 0; scoreBot = 0;
@@ -101,10 +79,25 @@ window.startGame = function(mode) {
 
 window.showMenu = function() {
     gameRunning = false;
+    victorySound.pause();
+    victorySound.currentTime = 0;
     document.getElementById('overlay-message').classList.add('hidden');
     document.getElementById('overlay-menu').classList.remove('hidden');
     resetPositions();
 };
+
+// --- EL RESTO DEL CÓDIGO SE MANTIENE IGUAL ---
+const ball = { x: 0, y: 0, radius: 12, dx: 0, dy: 0, friction: 0.98 };
+const player = { x: 0, y: 0, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
+const playerGoalkeeper = { x: 0, y: 0, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
+const bots = [
+    { x: 0, y: 0, radius: 15, color: '#f44336', speed: 2.2, type: 'jugador_rojo', stuckTimer: 0, lastX: 0, lastY: 0, detourDir: 1 },
+    { x: 0, y: 0, radius: 15, color: '#b71c1c', speed: 2, type: 'portero_rojo' }
+];
+
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; e.preventDefault(); });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 window.addEventListener('keydown', e => {
     if (e.code === 'KeyR') location.reload();
@@ -144,11 +137,9 @@ function resetPositions() {
 
 function update() {
     if (!gameRunning) return;
-
     const w = canvas.width, h = canvas.height;
     const goalTop = h * 0.375, goalBot = h * 0.625;
 
-    // --- 1. MOVIMIENTO JUGADOR AZUL ---
     if (keys['ArrowUp'] && player.y > player.radius) player.y -= player.speed;
     if (keys['ArrowDown'] && player.y < h - player.radius) player.y += player.speed;
     if (keys['ArrowLeft'] && player.x > player.radius) player.x -= player.speed;
@@ -157,7 +148,6 @@ function update() {
     if (keys['KeyA']) player.angle -= 0.05;
     if (keys['KeyD']) player.angle += 0.05;
 
-    // --- 2. CHUT JUGADOR ---
     if (keys['Space']) {
         let dist = Math.hypot(ball.x - player.x, ball.y - player.y);
         if (dist < player.radius + ball.radius + 20) {
@@ -166,83 +156,38 @@ function update() {
         }
     }
 
-    // --- 3. IA DE BOTS Y PORTEROS ---
     const allAI = [...bots, playerGoalkeeper];
     allAI.forEach(b => {
         if (!botsCanMove) return;
-        
         let targetX, targetY;
         if (b.type === 'portero_rojo') { 
-            targetX = w * 0.95; 
-            targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
+            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
         } else if (b.type === 'portero_azul') { 
-            targetX = w * 0.05; 
-            targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
+            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y)); 
         } else {
-            // --- BOT ATACANTE ROJO: siempre persigue el balón, rodeo si se atasca ---
-
-            // Detectar si el bot lleva tiempo sin moverse (atascado)
             const movedDist = Math.hypot(b.x - b.lastX, b.y - b.lastY);
-            if (movedDist < 0.4) {
-                b.stuckTimer++;
-            } else {
-                b.stuckTimer = Math.max(0, b.stuckTimer - 3);
-            }
-            b.lastX = b.x;
-            b.lastY = b.y;
-
-            // Si lleva ~50 frames atascado, cambiar dirección de rodeo
-            if (b.stuckTimer > 50) {
-                b.stuckTimer = 0;
-                b.detourDir *= -1;
-            }
-
-            // Target principal: siempre el balón, llegando por detrás para empujarlo
-            if (b.x > ball.x) {
-                // Está bien posicionado: apuntar justo detrás del balón para empujarlo a la izquierda
-                targetX = ball.x - 5;
-                targetY = ball.y;
-            } else {
-                // Se le escapó por delante: reposicionarse detrás
-                targetX = ball.x + 50;
-                targetY = ball.y;
-            }
-
-            // Si está atascado, añadir desplazamiento lateral perpendicular para rodearlo
-            if (b.stuckTimer > 20) {
-                targetX += 30 * b.detourDir;
-                targetY += 60 * b.detourDir;
-            }
+            if (movedDist < 0.4) b.stuckTimer++;
+            else b.stuckTimer = Math.max(0, b.stuckTimer - 3);
+            b.lastX = b.x; b.lastY = b.y;
+            if (b.stuckTimer > 50) { b.stuckTimer = 0; b.detourDir *= -1; }
+            if (b.x > ball.x) { targetX = ball.x - 5; targetY = ball.y; }
+            else { targetX = ball.x + 50; targetY = ball.y; }
+            if (b.stuckTimer > 20) { targetX += 30 * b.detourDir; targetY += 60 * b.detourDir; }
         }
-
-        // Movimiento VECTORIAL: mueve en diagonal a velocidad constante hacia el target
-        const dx = targetX - b.x;
-        const dy = targetY - b.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 1) {
-            b.x += (dx / dist) * b.speed;
-            b.y += (dy / dist) * b.speed;
-        }
+        const dx = targetX - b.x, dy = targetY - b.y, dist = Math.hypot(dx, dy);
+        if (dist > 1) { b.x += (dx / dist) * b.speed; b.y += (dy / dist) * b.speed; }
         keepInBounds(b);
-
-        // --- COLISIÓN IA-BALÓN (CON SEPARACIÓN Y EMPUJE) ---
         let d = Math.hypot(ball.x - b.x, ball.y - b.y);
         let minDist = b.radius + ball.radius;
         if (d < minDist) {
             let angle = Math.atan2(ball.y - b.y, ball.x - b.x);
-            
-            // Empujón físico: movemos el balón fuera del bot
             let overlap = minDist - d;
             ball.x += Math.cos(angle) * (overlap + 2);
             ball.y += Math.sin(angle) * (overlap + 2);
-
-            // Fuerza de salida
-            ball.dx = Math.cos(angle) * 4; // Fuerza constante para que no se pare
-            ball.dy = Math.sin(angle) * 4;
+            ball.dx = Math.cos(angle) * 4; ball.dy = Math.sin(angle) * 4;
         }
     });
 
-    // --- 4. COLISIÓN JUGADOR-BALÓN ---
     let dPl = Math.hypot(ball.x - player.x, ball.y - player.y);
     if (dPl < player.radius + ball.radius) {
         let angle = Math.atan2(ball.y - player.y, ball.x - player.x);
@@ -250,24 +195,19 @@ function update() {
         ball.dy = Math.sin(angle) * 2 + (ball.y - player.y) * 0.5;
     }
 
-    // --- 5. FÍSICA Y FRICCIÓN ---
     ball.x += ball.dx; ball.y += ball.dy;
     ball.dx *= ball.friction; ball.dy *= ball.friction;
 
-    // --- 6. GOLES Y REBOTES ---
     if (ball.x < 0 || ball.x > w) {
         if (ball.y > goalTop && ball.y < goalBot) {
             if (ball.x < 0) { scoreBot++; showMessage("¡GOL RIVAL!"); }
             else { scorePlayer++; showMessage("¡GOOOL!"); }
         } else { 
-            ball.dx *= -1.2;
-            ball.x = ball.x < 0 ? 15 : w - 15;
+            ball.dx *= -1.2; ball.x = ball.x < 0 ? 15 : w - 15;
         }
     }
     if (ball.y < 0 || ball.y > h) {
-        ball.dy *= -1.2;
-        ball.y = ball.y < 0 ? 15 : h - 15;
-        // Ayuda para que el balón no se quede muerto en la banda
+        ball.dy *= -1.2; ball.y = ball.y < 0 ? 15 : h - 15;
         if (Math.abs(ball.dx) < 1) ball.dx = (ball.x > w/2 ? -2 : 2);
     }
 }
@@ -279,30 +219,21 @@ function showMessage(txt) {
     document.getElementById('status-text').innerText = txt;
     document.getElementById('overlay-message').classList.remove('hidden');
     
-    // REPRODUCIR SONIDO DE GOL
     if (txt === "¡GOOOL!" || txt === "¡GOL RIVAL!") {
         goalSound.currentTime = 0;
         goalSound.play();
     }
 
-    // Comprobar si alguien ha alcanzado el límite de goles
     const isGameOver = (gameMode === 1 && (scorePlayer >= 3 || scoreBot >= 3)) || 
                        (gameMode === 2 && (scorePlayer >= 1 || scoreBot >= 1));
 
     if (isGameOver) {
-        setTimeout(() => {
-            stopGoalSound(); // Detenemos el audio del gol antes de la victoria
-            endGame();
-        }, 1000);
+        setTimeout(() => { stopGoalSound(); endGame(); }, 1000);
     } else {
-        setTimeout(() => { 
-            resetPositions(); 
-            startCountdown(); 
-            stopGoalSound(); 
-        }, 1500);
+        setTimeout(() => { resetPositions(); startCountdown(); stopGoalSound(); }, 1500);
     }
 }
-// Función auxiliar para detener y resetear el audio
+
 function stopGoalSound() {
     goalSound.pause();
     goalSound.currentTime = 0;
@@ -311,85 +242,51 @@ function stopGoalSound() {
 function endGame() {
     gameRunning = false;
     clearInterval(timerInterval);
-    
     const win = scorePlayer > scoreBot;
     document.getElementById('status-text').innerText = win ? "¡VICTORIA!" : "DERROTA...";
     document.getElementById('final-buttons').classList.remove('hidden');
-
-    // REPRODUCIR SONIDO DE VICTORIA
-    // Solo suena si el jugador humano ha ganado
     if (win) {
         victorySound.currentTime = 0;
         victorySound.play();
     }
 }
 
-
-// Función auxiliar para detener sonidos si reinicias el juego
-window.showMenu = function() {
-    gameRunning = false;
-    victorySound.pause(); // <--- Detener victoria al volver al menú
-    victorySound.currentTime = 0;
-    document.getElementById('overlay-message').classList.add('hidden');
-    document.getElementById('overlay-menu').classList.remove('hidden');
-    resetPositions();
-};
-
-
 function updateTimer() {
-    if (!gameRunning) return; // Solo cuenta si el balón se está moviendo
-    
+    if (!gameRunning) return;
     secondsElapsed++;
     const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
     const secs = (secondsElapsed % 60).toString().padStart(2, '0');
     document.getElementById('game-timer').innerText = `Tiempo: ${mins}:${secs}`;
 }
 
-
 function keepInBounds(obj) {
     const w = canvas.width, h = canvas.height;
-    // Límite Izquierdo
     if (obj.x < obj.radius) obj.x = obj.radius;
-    // Límite Derecho
     if (obj.x > w - obj.radius) obj.x = w - obj.radius;
-    // Límite Superior
     if (obj.y < obj.radius) obj.y = obj.radius;
-    // Límite Inferior
     if (obj.y > h - obj.radius) obj.y = h - obj.radius;
 }
-
 
 function draw() {
     const w = canvas.width, h = canvas.height;
     const goalTop = h * 0.375, goalBot = h * 0.625;
-
     ctx.clearRect(0, 0, w, h);
-    
-    // Campo
     ctx.strokeStyle = "white"; ctx.lineWidth = 2;
     ctx.strokeRect(5, 5, w-10, h-10);
     ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
     ctx.beginPath(); ctx.arc(w/2, h/2, h*0.15, 0, Math.PI*2); ctx.stroke();
-    
-    // Porterías
     ctx.fillStyle = "rgba(255,255,255,0.3)";
     ctx.fillRect(0, goalTop, 15, goalBot - goalTop);
     ctx.fillRect(w - 15, goalTop, 15, goalBot - goalTop);
-
-    // Jugadores
     drawCircle(player.x, player.y, player.radius, player.color);
     drawCircle(playerGoalkeeper.x, playerGoalkeeper.y, playerGoalkeeper.radius, playerGoalkeeper.color);
     bots.forEach(b => drawCircle(b.x, b.y, b.radius, b.color));
-
-    // Flecha dirección jugador
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(player.angle);
     ctx.fillStyle = "white";
     ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(18, -6); ctx.lineTo(18, 6); ctx.fill();
     ctx.restore();
-
-    // Balón
     ctx.save();
     ctx.translate(ball.x, ball.y);
     ctx.font = `${ball.radius * 2.5}px Arial`;
@@ -397,7 +294,6 @@ function draw() {
     ctx.textBaseline = "middle";
     ctx.fillText("⚽", 0, 0);
     ctx.restore();
-
     requestAnimationFrame(() => { update(); draw(); });
 }
 

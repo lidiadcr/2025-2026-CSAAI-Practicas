@@ -3,11 +3,11 @@ body {
     margin: 0;
     padding: 0;
     /* 1. Imagen de fondo */
-    background-image: url('campo.jpg'); /* <--- Asegúrate de usar el nombre exacto de tu imagen */
-    background-size: cover; /* Escala para cubrir toda la pantalla */
-    background-position: center; /* Centra la imagen */
+    background-image: url('campo.jpg'); 
+    background-size: cover; 
+    background-position: center; 
     background-repeat: no-repeat;
-    background-attachment: fixed; /* Mantiene el fondo quieto al hacer scroll */
+    background-attachment: fixed; 
     
     color: white;
     font-family: Arial, sans-serif;
@@ -23,68 +23,61 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    
-    /* --- CAMBIO AQUÍ: QUITAMOS EL FONDO GRIS --- */
-    background-color: transparent; /* <--- Ahora es totalmente transparente */
+    background-color: transparent; 
     padding: 20px;
 }
 
 /* --- SOLUCIÓN DE LEGIBILIDAD PARA EL TEXTO --- */
-/* Añadimos una sombra negra fuerte a todos los textos fuera del campo */
 #game-header h1, 
 #game-header p, 
 #game-controls-bar {
-    /* Crea un contorno negro nítido alrededor de cada letra */
     text-shadow: 
         -2px -2px 0 #000,  
          2px -2px 0 #000,
         -2px  2px 0 #000,
          2px  2px 0 #000,
-         0px  4px 5px rgba(0,0,0,0.8); /* Sombra suave para dar profundidad */
+         0px  4px 5px rgba(0,0,0,0.8); 
     
-    font-weight: bold; /* Hace la letra más gruesa para que el contorno se note mejor */
+    font-weight: bold; 
 }
 
-/* Cabecera del juego */
 #game-header {
     text-align: center;
     margin-bottom: 10px;
 }
 
-/* Ajuste específico para el título principal */
 #game-header h1 {
     font-size: 3.5rem;
     letter-spacing: 3px;
     margin-bottom: 0;
 }
 
-/* Ajuste para la versión y descripción */
 #game-header p {
     font-size: 1.2rem;
     margin-top: 5px;
     color: #ffffff; 
 }
+
 #game-controls-bar {
     margin-top: 20px;
-    background: rgba(0, 0, 0, 0.4); /* Una franja muy sutil para ayudar al contraste */
+    background: rgba(0, 0, 0, 0.4); 
     padding: 10px 20px;
     border-radius: 20px;
 }
-/* Contenedor del Campo */
+
 #game-container {
     position: relative;
     border: 4px solid white;
-    background-color: #2e7d32; /* Verde césped */
+    background-color: #2e7d32; 
     box-shadow: 0 0 20px rgba(0,0,0,0.8);
 }
 
 canvas {
     max-width: 100%;
     height: auto;
-    touch-action: none; /* Evita que el navegador haga scroll al tocar el juego */
+    touch-action: none; 
 }
 
-/* Marcador Central Estilo Arcade */
 #central-scoreboard {
     position: absolute;
     top: 15px;
@@ -107,14 +100,13 @@ canvas {
     text-shadow: 2px 2px 3px rgba(0,0,0,0.8);
 }
 
-/* Capas de Menú y Mensajes */
 .overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85); /* Un poco más oscuro para que resalten los botones */
+    background: rgba(0, 0, 0, 0.85); 
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -125,7 +117,6 @@ canvas {
 
 .hidden { display: none !important; }
 
-/* Botones */
 button {
     background: transparent;
     border: 2px solid white;
@@ -135,7 +126,6 @@ button {
     font-size: 1.2rem;
     cursor: pointer;
     transition: 0.3s;
-    text-shadow: none; /* Los botones no necesitan la sombra de texto */
 }
 
 button:hover {
@@ -143,29 +133,20 @@ button:hover {
     color: black;
 }
 
-/* Barra inferior de controles */
-#game-controls-bar {
-    margin-top: 15px;
-    font-size: 1rem;
-    color: white;
-}
 #game-timer {
     font-size: 1.5rem;
-    color: #ffeb3b; /* Color amarillo tipo arcade */
+    color: #ffeb3b; 
     font-family: 'Courier New', Courier, monospace;
     margin-top: 5px;
     text-shadow: 2px 2px 0px #000;
 }
 
+/* --- CAMBIOS PARA EVITAR LAS ADVERTENCIAS DEL VALIDADOR --- */
 .mobile-only {
     display: none;
-    user-select: none; /* Estándar */
-    -webkit-user-select: none; /* Safari/Chrome */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE/Edge antiguo */
+    user-select: none; /* Propiedad estándar corregida */
 }
 
-/* Mostrar solo en pantallas pequeñas */
 @media (max-width: 900px) {
     body {
         overflow-y: auto;
@@ -219,9 +200,8 @@ button:hover {
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
+        /* Eliminamos -webkit-tap-highlight-color que daba aviso */
         touch-action: manipulation;
-        active-opacity: 0.5;
     }
 
     .touch-btn:active {
@@ -240,6 +220,6 @@ button:hover {
     }
 
     #game-controls-bar {
-        display: none; /* en móvil no hace falta el texto de controles */
+        display: none; 
     }
 }

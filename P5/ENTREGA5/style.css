@@ -1,8 +1,8 @@
-/* --- CONFIGURACIÓN DEL FONDO (Cuerpo) --- */
+
 body {
     margin: 0;
     padding: 0;
-    /* 1. Imagen de fondo */
+    
     background-image: url('campo.jpg'); 
     background-size: cover; 
     background-position: center; 
@@ -27,7 +27,7 @@ body {
     padding: 20px;
 }
 
-/* --- SOLUCIÓN DE LEGIBILIDAD PARA EL TEXTO --- */
+
 #game-header h1, 
 #game-header p, 
 #game-controls-bar {
@@ -141,10 +141,10 @@ button:hover {
     text-shadow: 2px 2px 0px #000;
 }
 
-/* --- CAMBIOS PARA EVITAR LAS ADVERTENCIAS DEL VALIDADOR --- */
+
 .mobile-only {
     display: none;
-    user-select: none; /* Propiedad estándar corregida */
+    user-select: none; 
 }
 
 @media (max-width: 900px) {
@@ -200,7 +200,6 @@ button:hover {
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        /* Eliminamos -webkit-tap-highlight-color que daba aviso */
         touch-action: manipulation;
     }
 

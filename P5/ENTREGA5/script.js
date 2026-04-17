@@ -136,7 +136,6 @@ function update() {
     const w = canvas.width, h = canvas.height;
     const goalTop = h * 0.375, goalBot = h * 0.625;
 
-    // Cambiado a notación de punto para el validador
     if (keys.ArrowUp && player.y > player.radius) player.y -= player.speed;
     if (keys.ArrowDown && player.y < h - player.radius) player.y += player.speed;
     if (keys.ArrowLeft && player.x > player.radius) player.x -= player.speed;

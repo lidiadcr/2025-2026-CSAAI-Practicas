@@ -14,7 +14,7 @@ window.addEventListener('resize', resizeCanvas);
 
 const keys = {};
 
-// --- CONTROLES TÁCTILES PARA MÓVIL ---
+//CONTROL PARA EL MOVIL 
 const mobileBtnMapping = {
     'btn-up': 'ArrowUp',
     'btn-down': 'ArrowDown',
@@ -41,7 +41,7 @@ Object.keys(mobileBtnMapping).forEach(btnId => {
     }
 });
 
-// --- VARIABLES DE ESTADO ---
+
 let gameRunning = false;
 let gameMode = 0;
 let scorePlayer = 0;
@@ -52,7 +52,7 @@ let timerInterval = null;
 const goalSound = new Audio('gol.m4a');
 const victorySound = new Audio('victoria.mp3');
 
-// --- FUNCIONES DE POSICIONAMIENTO Y ESTADO ---
+
 function resetPositions() {
     const cx = canvas.width / 2, cy = canvas.height / 2;
     const w = canvas.width;
@@ -63,7 +63,6 @@ function resetPositions() {
     bots[1].x = w * 0.94; bots[1].y = cy;
 }
 
-// Definimos showMenu como función normal para que el validador no diga que es indefinida
 function showMenu() {
     gameRunning = false;
     victorySound.pause();
@@ -74,7 +73,7 @@ function showMenu() {
 }
 window.showMenu = showMenu;
 
-// --- FUNCIONES DE MENÚ Y CONTROL ---
+
 window.startGame = function(mode) {
     gameMode = mode;
     scorePlayer = 0; scoreBot = 0;
@@ -94,7 +93,7 @@ window.startGame = function(mode) {
     timerInterval = setInterval(updateTimer, 1000);
 };
 
-// --- EL RESTO DEL CÓDIGO SE MANTIENE IGUAL ---
+
 const ball = { x: 0, y: 0, radius: 12, dx: 0, dy: 0, friction: 0.98 };
 const player = { x: 0, y: 0, radius: 15, color: '#2196F3', speed: 4, angle: 0 };
 const playerGoalkeeper = { x: 0, y: 0, radius: 15, color: '#0D47A1', speed: 2, type: 'portero_azul' };
@@ -227,7 +226,7 @@ function showMessage(txt) {
                        (gameMode === 2 && (scorePlayer >= 1 || scoreBot >= 1));
 
     if (isGameOver) {
-        // Guardamos quién metió el último gol para determinar el ganador
+        
         const playerScored = (txt === "¡GOOOL!");
         setTimeout(() => { stopGoalSound(); endGame(playerScored); }, 1000);
     } else {
@@ -243,8 +242,6 @@ function stopGoalSound() {
 function endGame(playerScored) {
     gameRunning = false;
     if (timerInterval) clearInterval(timerInterval);
-    // En modo gol de oro, el ganador es quien metió el último gol
-    // En modo a 3, el ganador es quien tiene más goles
     const win = (gameMode === 2) ? playerScored : (scorePlayer > scoreBot);
     console.log(`endGame: scorePlayer=${scorePlayer}, scoreBot=${scoreBot}, win=${win}`);
     document.getElementById('status-text').innerText = win ? "¡VICTORIA!" : "DERROTA...";

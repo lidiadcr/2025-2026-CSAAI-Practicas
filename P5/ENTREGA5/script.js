@@ -1,5 +1,5 @@
 /* jshint esversion: 6 */
-//cambio
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -160,9 +160,9 @@ function update() {
         if (!botsCanMove) return;
         let targetX, targetY;
         if (b.type === 'portero_rojo') {
-            targetX = w * 0.95; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
+            targetX = w * 0.93; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
         } else if (b.type === 'portero_azul') {
-            targetX = w * 0.05; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
+            targetX = w * 0.07; targetY = Math.max(goalTop, Math.min(goalBot, ball.y));
         } else {
             const movedDist = Math.hypot(b.x - b.lastX, b.y - b.lastY);
             if (movedDist < 0.4) b.stuckTimer++;
@@ -183,7 +183,12 @@ function update() {
             let overlap = minDist - d;
             ball.x += Math.cos(angle) * (overlap + 2);
             ball.y += Math.sin(angle) * (overlap + 2);
-            ball.dx = Math.cos(angle) * 4; ball.dy = Math.sin(angle) * 4;
+            // Si el balón está pegado a la pared lateral, forzar velocidad hacia el centro
+            const margin = ball.radius + 5;
+            if (ball.x < margin) { ball.dx = Math.abs(ball.dx) + 2; ball.x = margin; }
+            else if (ball.x > w - margin) { ball.dx = -(Math.abs(ball.dx) + 2); ball.x = w - margin; }
+            else { ball.dx = Math.cos(angle) * 4; }
+            ball.dy = Math.sin(angle) * 4;
         }
     });
 
@@ -192,22 +197,28 @@ function update() {
         let angle = Math.atan2(ball.y - player.y, ball.x - player.x);
         ball.dx = Math.cos(angle) * 2 + (ball.x - player.x) * 0.5;
         ball.dy = Math.sin(angle) * 2 + (ball.y - player.y) * 0.5;
+        const margin = ball.radius + 5;
+        if (ball.x < margin) { ball.dx = Math.abs(ball.dx) + 2; ball.x = margin; }
+        else if (ball.x > w - margin) { ball.dx = -(Math.abs(ball.dx) + 2); ball.x = w - margin; }
     }
 
     ball.x += ball.dx; ball.y += ball.dy;
     ball.dx *= ball.friction; ball.dy *= ball.friction;
 
-    if (ball.x < 0 || ball.x > w) {
+    if (ball.x - ball.radius < 0 || ball.x + ball.radius > w) {
         if (ball.y > goalTop && ball.y < goalBot) {
             if (ball.x < 0) { scoreBot++; showMessage("¡GOL RIVAL!"); }
             else { scorePlayer++; showMessage("¡GOOOL!"); }
         } else {
-            ball.dx *= -1.2; ball.x = ball.x < 0 ? 15 : w - 15;
+            ball.dx *= -1.2;
+            if (ball.x - ball.radius < 0) ball.x = ball.radius + 2;
+            else ball.x = w - ball.radius - 2;
         }
     }
-    if (ball.y < 0 || ball.y > h) {
-        ball.dy *= -1.2; ball.y = ball.y < 0 ? 15 : h - 15;
-        if (Math.abs(ball.dx) < 1) ball.dx = (ball.x > w/2 ? -2 : 2);
+    if (ball.y - ball.radius < 0 || ball.y + ball.radius > h) {
+        ball.dy *= -1.2;
+        if (ball.y - ball.radius < 0) ball.y = ball.radius + 2;
+        else ball.y = h - ball.radius - 2;
     }
 }
 

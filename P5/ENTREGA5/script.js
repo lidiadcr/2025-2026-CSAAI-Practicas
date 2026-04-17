@@ -3,7 +3,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Canvas responsivo
+
 function resizeCanvas() {
     const maxW = Math.min(800, window.innerWidth - 10);
     canvas.width = maxW;

@@ -76,15 +76,6 @@ window.showMenu = showMenu;
 
 // --- FUNCIONES DE MENÚ Y CONTROL ---
 window.startGame = function(mode) {
-    [goalSound, victorySound].forEach(sound => {
-        sound.play().then(() => {
-            sound.pause();
-            sound.currentTime = 0;
-            sound.volume = 1;
-        }).catch(() => {});
-        sound.volume = 0;
-    });
-
     gameMode = mode;
     scorePlayer = 0; scoreBot = 0;
     secondsElapsed = 0;
